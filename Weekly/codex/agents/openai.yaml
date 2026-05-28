@@ -1,0 +1,7 @@
+interface:
+  display_name: "Weekly"
+  short_description: "Meeting media into project memory updates"
+  brand_color: "#2563EB"
+  default_prompt: "Use $Weekly to process this local weekly meeting recording or transcript into a concise project memory update."
+policy:
+  allow_implicit_invocation: true
