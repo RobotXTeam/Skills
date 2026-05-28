@@ -1,0 +1,4 @@
+interface:
+  display_name: "Updata"
+  short_description: "Sync CLI skills through the GitHub Skills repo"
+  default_prompt: "Sync Codex, Gemini, and Claude skills with the GitHub-backed Skills repository."
