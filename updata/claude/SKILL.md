@@ -7,7 +7,10 @@ description: Synchronize Steven's Codex, Gemini, and Claude skills through the G
 
 ## Overview
 
-Keep the local `Skills` Git repository as the GitHub-backed exchange point for local CLI skills. Compare whole skill directories across Codex, Gemini, Claude, and the repo; copy the more complete version to the older/missing side, then commit and push repo-side updates.
+Keep the local `Skills` Git repository as the GitHub-backed exchange point for:
+
+1. **CLI skills** — compare whole skill directories across Codex, Gemini, Claude, and the repo; copy the more complete version to the older/missing side, then commit and push repo-side updates.
+2. **SSH config** — sync `~/.ssh/config` with the repo's `config` file using the same newer-wins logic.
 
 ## Paths
 
@@ -126,6 +129,50 @@ git push
 ```
 
 Do not use `git add .` if unrelated files are dirty.
+
+## SSH Config Sync
+
+After syncing skills, also sync the SSH config file.
+
+### Paths
+
+- Repo: `$SKILLS_REPO/config`
+- Local: `~/.ssh/config`
+
+### Comparison
+
+Use non-whitespace character count to determine which is newer:
+
+```bash
+repo_chars=$(tr -d '[:space:]' < "$SKILLS_REPO/config" | wc -c)
+local_chars=$(tr -d '[:space:]' < ~/.ssh/config | wc -c)
+```
+
+- If one side is missing, copy from the existing side.
+- If both exist and character counts match, do nothing.
+- If both exist and differ, the side with more non-whitespace characters is considered newer.
+- If counts are equal, prefer the newer modification time.
+- If the result is ambiguous, report both paths and ask before copying.
+
+### Sync
+
+- If repo is newer: `cp "$SKILLS_REPO/config" ~/.ssh/config`
+- If local is newer: `cp ~/.ssh/config "$SKILLS_REPO/config"` then `git add config && git commit && git push` (as part of the same commit as any skill changes)
+
+## Excluded Skills
+
+Do NOT sync these directories — they are third-party or generated, not Steven's own skills:
+
+- `code-review/`
+- `create-project/`
+- `doc-writer/`
+- `frontend-design/`
+- `.agents/`
+- `.codex/`
+- `.system/` (Codex system skills)
+- `skills-backups/`
+
+Skip these in all comparison, copy, and commit steps.
 
 ## Reporting
 
