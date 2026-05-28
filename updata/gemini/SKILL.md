@@ -167,6 +167,7 @@ Do NOT sync these directories — they are third-party or generated, not Steven'
 - `create-project/`
 - `doc-writer/`
 - `frontend-design/`
+- `skill-creator/`
 - `.agents/`
 - `.codex/`
 - `.system/` (Codex system skills)
