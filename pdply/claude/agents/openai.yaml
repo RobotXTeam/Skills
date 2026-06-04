@@ -1,0 +1,7 @@
+interface:
+  display_name: "PDPly"
+  short_description: "生成精炼、结构完整的商详 DOCX"
+  default_prompt: "Use $pdply to generate a concise product-detail DOCX from a local reference-data folder."
+policy:
+  allow_implicit_invocation: true
+
