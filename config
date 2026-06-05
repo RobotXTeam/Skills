@@ -18,7 +18,7 @@ Host qiang
 #密码 1
 
 Host seeed
-  HostName 100.76.45.91
+  HostName 100.76.45.91 #192.168.4.7
   User seeed
 #密码 0
 
