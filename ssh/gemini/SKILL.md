@@ -17,17 +17,18 @@ Connect to Steven's devices via SSH. Use the host table below to find the correc
 | seeed | 100.76.45.91 | seeed | 0 | no | Tailscale |
 | steven | 100.108.64.20 | steven | 1 | no | Tailscale |
 | recamera | 192.168.42.1 | recamera | - | no | Direct LAN |
-| recamera-10 | 192.168.2.10 | recamera | kkk000++ | no | LAN |
 | recamera-11 | 192.168.2.11 | recamera | kkk000++ | no | LAN |
-| recamera-12 | 192.168.2.12 | recamera | kkk000++ | no | LAN |
+| recamera-10 | 192.168.2.10 | recamera | kkk000++ | no | LAN |
 | recamera-nom | 192.168.2.15 | recamera | kkk000++ | no | LAN |
+| jetson | 192.168.2.30 | jetson | 1 | yes | LAN |
 | recamera-200 | 192.168.2.200 | recamera | kkk000++ | no | LAN |
 | recamera-201 | 192.168.2.201 | recamera | kkk000++ | no | LAN |
-| recamera pro | 192.168.2.141 | root | 1 | yes | LAN |
-| jetson | 192.168.2.30 | jetson | 1 | yes | LAN |
+| recamera-12 | 192.168.2.12 | recamera | kkk000++ | no | LAN |
 | rv1126b | 192.168.2.51 | root | 1 | yes | LAN |
-| openwrt-lan | 192.168.2.1 | root | pi | yes | LAN duplicate |
+| recamera pro | 192.168.2.141 | root | 1 | yes | LAN |
+| openwrt | 192.168.2.1 | root | pi | yes | LAN |
 | rk3588 | 192.168.5.50 | orangepi | 1 | yes | LAN |
+| nanopi | 192.168.2.140 | pi | pi | yes | LAN |
 
 ## How to connect
 
