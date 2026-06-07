@@ -18,12 +18,12 @@ Host qiang
 #密码 1
 
 Host seeed
-  HostName 100.76.45.91 #192.168.4.7
+  HostName 100.76.45.91 #192.168.4.7 10.88.222.222
   User seeed
 #密码 0
 
 Host steven
-  HostName 100.108.64.20
+  HostName 100.108.64.20 #10.88.226.245
   User steven
 #密码 1
 
