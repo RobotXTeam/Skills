@@ -1,0 +1,4 @@
+interface:
+  display_name: "reCamera"
+  short_description: "QA-verify reCamera wiki demos and build NPU demos on seeed."
+  default_prompt: "Validate a reCamera wiki page or deploy a custom NPU model demo on seeed, collect evidence, and report reproducibility."
