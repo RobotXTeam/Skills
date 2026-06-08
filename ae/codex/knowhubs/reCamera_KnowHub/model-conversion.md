@@ -43,6 +43,27 @@ docker run --rm \
 - 仅当后处理可以使用相对排序或 int8 logits（如 argmax/分类/分割掩码）时才使用 `--quant_output`。对于深度/回归/置信度阈值输出，除非重写后处理以处理量化输出，否则避免使用。
 - 对于快速可行性测试，小型校准集是可以接受的；对于质量声明，使用来自目标摄像头域的代表性帧。
 
+## PaddleOCR / Paddle Inference Notes
+
+PaddleOCR 发布的 `*_infer` 包通常包含 `inference.pdmodel` 和 `inference.pdiparams`，需要先导出 ONNX，再进入 TPU-MLIR。`sophgo/tpuc_dev:v3.1` 中已有 `paddle2onnx`，即使 `paddle` Python 包因 `libssl.so.1.1` 不可导入，`paddle2onnx` CLI 仍可转换这些 inference 模型。
+
+```bash
+paddle2onnx --model_dir <infer_dir> \
+  --model_filename inference.pdmodel \
+  --params_filename inference.pdiparams \
+  --opset_version 11 \
+  --save_file <model>.onnx
+```
+
+PP-OCR 的 ONNX 常是动态 shape，转换 CVIMODEL 时必须固定：
+
+- 中文检测模型常用 `--input_shapes [[1,3,640,640]]`，输出类似 `sigmoid_0.tmp_0`，DBNet 后处理需要概率图的绝对值，不要盲目开启 `--quant_output`。
+- 中文识别模型常用 `--input_shapes [[1,3,48,320]]` 或更宽的 `[[1,3,48,640]]`，输出类似 `softmax_*.tmp_0`，CTC greedy decode 只依赖 argmax 时可以评估 `--quant_output`，但置信度语义会变化。
+- PaddleOCR 标准预处理通常是 RGB、`mean 127.5,127.5,127.5`、`scale 0.0078125,0.0078125,0.0078125`，融合预处理后 reCamera C++ 侧应喂连续 `uint8` RGB NHWC。
+- 检测模型如果 C++ 侧使用 letterbox，应在 TPU-MLIR 转换时也使用 `--keep_aspect_ratio --pad_value 128 --pad_type center`，否则坐标反算和 padding 语义会不一致。
+
+当 ION 内存接近 cv181x 预算时，先尝试更小输入或 INT8；`--quant_output` 可以显著降低输出反量化内存，但只适合后处理不依赖绝对 float 置信度的模型。
+
 ## Depth Anything 实践记录
 
 需要记住的实践结果：
