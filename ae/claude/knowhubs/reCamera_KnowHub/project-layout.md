@@ -51,5 +51,27 @@ solutions/sesg-project/<demo_name>/
   README.md          # optional short local runbook
 ```
 
-For model demos, place generated models and large evidence files outside the source tree unless they are intentionally part of the repository. Use `/home/steven/work/<demo_name>` on the active host for conversion artifacts, logs, and videos.
+For model demos, place generated models and large evidence files outside the source tree unless they are intentionally part of the repository. In public docs, refer to that location as `$WORK_DIR/<demo_name>` or `<conversion-work-dir>` instead of a local absolute path.
 
+## Public Documentation Path Rule
+
+README, Wiki, demo docs, and source-code example comments are written for other developers, not only for Steven's local machine. Do not include local absolute paths such as:
+
+```text
+/home/steven/...
+/home/steven/work/...
+/home/steven/下载/...
+```
+
+Use portable forms instead:
+
+```text
+$REPO_ROOT/solutions/sesg-project/<demo_name>
+$SDK_ROOT
+$TOOLCHAIN_BIN
+$DEMO_DIR
+<path-to-model>
+docs/evidence/<file>
+```
+
+Real local validation paths can be recorded in internal deployment reports, but public README/Wiki/demo docs should use relative paths, environment variables, placeholders, or pseudo commands.

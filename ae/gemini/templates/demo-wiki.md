@@ -3,6 +3,9 @@
 ```markdown
 # <Demo Title>
 
+> Writing rule: this public-facing Wiki must not contain local machine paths such as `/home/steven/...`.
+> Use relative paths, environment variables, or placeholders like `$REPO_ROOT`, `$SDK_ROOT`, `$TOOLCHAIN_BIN`, `$DEMO_DIR`, and `<path-to-model>`.
+
 ## 概述
 [简要描述这个 demo 的功能和用途]
 
@@ -38,7 +41,7 @@
 [列出相关参考链接]
 
 ## 证据
-- 截图：[链接]
-- 视频：[链接]
-- 日志：[链接]
+- 截图：[相对路径或公开链接]
+- 视频：[相对路径或公开链接]
+- 日志：[相对路径或公开链接]
 ```
