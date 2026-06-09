@@ -10,6 +10,7 @@
 - `receiver-recording.md` - 官方接收端录制方法
 - `device-ops.md` - 设备操作知识（待补充）
 - `known-reports.md` - 已知验证报告（待补充）
+- `project-layout.md` - reCamera C++ demo 项目放置和目录规范
 
 ## 使用方法
 

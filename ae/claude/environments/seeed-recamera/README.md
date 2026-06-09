@@ -13,6 +13,7 @@ PC → seeed (SSH) → reCamera (USB/LAN)
 - `network.md` - 网络配置（IP 地址、动态 IP 处理）
 - `credentials.md` - 凭据信息（SSH 密码等）
 - `toolchain.md` - 工具链配置（SDK、编译器路径）
+- `development-policy.md` - seeed 主机开发和仓库操作规则
 - `scripts/` - 辅助脚本目录
 
 ## 使用方法

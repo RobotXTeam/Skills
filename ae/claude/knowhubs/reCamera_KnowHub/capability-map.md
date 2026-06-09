@@ -158,6 +158,12 @@ sudo env LD_LIBRARY_PATH=/mnt/system/lib:/mnt/system/usr/lib:/mnt/system/usr/lib
 
 ## Software Documents
 
+`reCamera_demo_project_layout`
+- 能力：Steven 当前 reCamera C++ demo 目录规范和项目归档规则。
+- 默认仓库：`seeed:/home/steven/sscma-example-sg200x`。
+- 新 demo 默认目录：`solutions/sesg-project/<demo_name>`。
+- 参考：`project-layout.md`。
+
 `develop_with_c_cpp`
 - 能力：C/C++ 开发基线。
 - 验证：工具链、SDK 路径、示例构建、部署、运行时命令。

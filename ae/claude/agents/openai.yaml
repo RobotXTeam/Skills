@@ -1,4 +1,4 @@
 interface:
-  display_name: "reCamera"
-  short_description: "QA-verify reCamera wiki demos and build NPU demos on seeed."
+  display_name: "ae"
+  short_description: "AE Agent for Seeed reCamera: wiki QA, technical support, demo deployment"
   default_prompt: "Validate a reCamera wiki page or deploy a custom NPU model demo on seeed, collect evidence, and report reproducibility."
