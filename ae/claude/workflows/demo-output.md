@@ -69,6 +69,7 @@
 - 用相对路径、环境变量或占位路径替代，例如 `$REPO_ROOT`、`$SDK_ROOT`、`$TOOLCHAIN_BIN`、`$DEMO_DIR`、`<path-to-model>`。
 - 证据、日志、视频等本机验证产物可以写进内部部署报告，但公开 README/Wiki 只写相对位置或"see the generated evidence video"这类描述。
 - 如果真实命令依赖 Steven 环境，公开文档中使用可迁移的伪命令，并在内部报告另行记录真实路径。
+- 默认不要把 `.cvimodel`、`.onnx`、`.pth`、`.pt` 等大模型文件提交或推送到 GitHub 仓库。公开 README/Wiki 里写模型放置位置、下载链接、Release/LFS 方案或 `<path-to-model>` 占位说明；只有 Steven 明确要求"这次模型也上传"时才强制加入模型文件。
 
 ## 输出
 

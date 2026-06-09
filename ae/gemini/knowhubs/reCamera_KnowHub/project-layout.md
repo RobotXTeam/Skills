@@ -53,6 +53,8 @@ solutions/sesg-project/<demo_name>/
 
 For model demos, place generated models and large evidence files outside the source tree unless they are intentionally part of the repository. In public docs, refer to that location as `$WORK_DIR/<demo_name>` or `<conversion-work-dir>` instead of a local absolute path.
 
+By default, do not commit or push large model binaries such as `.cvimodel`, `.onnx`, `.pth`, or `.pt` to GitHub repositories. Keep them local, publish them through release assets/LFS when explicitly requested, or document them with placeholders such as `<path-to-model>`. Only force-add model files when Steven explicitly says that this specific demo should upload the models.
+
 ## Public Documentation Path Rule
 
 README, Wiki, demo docs, and source-code example comments are written for other developers, not only for Steven's local machine. Do not include local absolute paths such as:
