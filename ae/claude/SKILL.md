@@ -49,6 +49,54 @@ AE Agent 是一个完整的自动化工程代理，具有三大核心能力：
 - `templates/tech-support-reply.md` - 技术支持回复模板
 - `templates/demo-wiki.md` - Demo Wiki 模板
 
+## Cloud Asset Publishing
+
+Demo 输出工作流中，模型文件、完整证据图片和证据视频不提交到 GitHub 仓库，必须通过 Steven 本机已经登录的 rclone Google Drive remote 发布：
+
+- Remote：`agent:`
+- Wiki 根目录公开链接：`https://drive.google.com/drive/folders/1GOQUMCel7fapbJCWzEEynDIvIt-6Wf5p?usp=drive_link`
+- 云端目录：`agent:reCamera_Shared/Wiki/<demo_name>/model/`
+- 证据图片目录：`agent:reCamera_Shared/Wiki/<demo_name>/evidence/image/`
+- 证据视频目录：`agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/`
+- 对外文档默认写法：贴 Wiki 根目录公开链接，并写清楚子路径 `/reCamera_Shared/Wiki/<demo_name>/model/`、`/reCamera_Shared/Wiki/<demo_name>/evidence/image/`、`/reCamera_Shared/Wiki/<demo_name>/evidence/video/`。
+- 对外直达链接：可选。只有需要直达子目录时才分别使用 `rclone link` 为 `model/`、`evidence/image/`、`evidence/video/` 生成公开链接，默认不要设置过期时间。遇到 Google Drive API rate limit 时不要反复重试，直接使用 Wiki 根目录公开链接加子路径。
+
+执行 demo 输出时必须先验证 rclone 登录状态：
+
+```bash
+rclone listremotes
+rclone lsd agent:reCamera_Shared/Wiki --max-depth 1
+```
+
+登录/重连规则：
+
+- 如果 `agent:` 存在但访问失败，先在 Steven 本机执行 `rclone config reconnect agent:` 重新走 OAuth 授权。
+- 如果 `agent:` 不存在，在 Steven 本机执行 `rclone config` 新建 Google Drive remote，名称必须为 `agent`，scope 使用 `drive`。
+- 配置文件位于 `~/.config/rclone/rclone.conf`，正常应包含可自动续期的 `refresh_token`。
+- 不要把 rclone token、配置文件内容或任何密钥写入 wiki、README、GitHub 仓库或报告。
+
+云端资产上传完成后必须验证用户可访问。默认验证 Wiki 根目录公开链接即可：
+
+```bash
+WIKI_ROOT_LINK="https://drive.google.com/drive/folders/1GOQUMCel7fapbJCWzEEynDIvIt-6Wf5p?usp=drive_link"
+curl -L -I "$WIKI_ROOT_LINK"
+```
+
+上传命令：
+
+```bash
+rclone copy <local-model-dir> agent:reCamera_Shared/Wiki/<demo_name>/model/ --progress
+rclone lsf agent:reCamera_Shared/Wiki/<demo_name>/model/
+
+rclone copy <local-evidence-image-dir> agent:reCamera_Shared/Wiki/<demo_name>/evidence/image/ --progress
+rclone lsf agent:reCamera_Shared/Wiki/<demo_name>/evidence/image/
+
+rclone copy <local-evidence-video-dir> agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/ --progress
+rclone lsf agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/
+```
+
+`curl` 应返回可公开打开的 HTTP 响应（例如 200 或 Google Drive 的公开页面跳转）。验证通过后，README 和 Wiki 必须同时贴出 Wiki 根目录公开链接和三个精确子路径；模型部分列出需要下载的模型文件名，证据部分列出关键证据文件名。不要只写 `<path-to-model>` 占位。
+
 ## Workflows
 
 工作流文件定义了具体的执行流程：

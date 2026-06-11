@@ -9,6 +9,81 @@
 - 项目想法或开源项目 URL
 - 目标设备（reCamera）
 
+## 目录结构
+
+### 本机环境
+
+```
+~/work/reCamera_demo/                    ← 工作根目录
+├── <demo_name>/                         ← 如 ppocr_v4、depth_anything
+│   ├── DEPLOY_REPORT.md                 ← 部署报告
+│   ├── <demo_name>_Demo_Wiki.md         ← Wiki 文档
+│   ├── models/                          ← 模型文件（不提交）
+│   ├── calib/                           ← 校准数据（不提交）
+│   └── evidence/
+│       ├── image/                       ← 证据图片（关键帧提交，完整图片上传 Google Drive）
+│       │   ├── frame_0000.png
+│       │   └── ...
+│       └── video/                       ← 证据视频（不提交，上传 Google Drive）
+│           └── demo.mp4
+│
+├── export_*.py                          ← 导出脚本
+└── *.mlir, *.npz                        ← 中间产物（不提交）
+
+~/sscma-example-sg200x/solutions/sesg-project/<demo_name>/  ← 仓库目录
+├── CMakeLists.txt                       ← ✅ 提交
+├── README.md                            ← ✅ 提交
+├── main/*.cpp, *.h                      ← ✅ 提交
+├── *.py                                 ← ✅ 提交
+├── wiki/                                ← ✅ 提交
+│   ├── <demo_name>_Demo_Wiki.md
+│   └── DEPLOY_REPORT.md
+├── evidence/                            ← ✅ 提交少量关键截图
+│   └── frame_*.png                      ← 只提交关键帧（5-10 张）
+└── model/                               ← ❌ .gitignore 忽略；模型发布到 Google Drive
+```
+
+### 云端资产发布目录
+
+所有 demo 模型、完整证据图片、证据视频统一上传到 Steven 已登录的 rclone Google Drive remote：
+
+```text
+agent:reCamera_Shared/Wiki/<demo_name>/model/
+agent:reCamera_Shared/Wiki/<demo_name>/evidence/image/
+agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/
+```
+
+公开 Wiki 根目录链接固定为：
+
+```text
+https://drive.google.com/drive/folders/1GOQUMCel7fapbJCWzEEynDIvIt-6Wf5p?usp=drive_link
+```
+
+公开文档中可写成：
+
+```text
+/reCamera_Shared/Wiki/<demo_name>/model/
+/reCamera_Shared/Wiki/<demo_name>/evidence/image/
+/reCamera_Shared/Wiki/<demo_name>/evidence/video/
+```
+
+README 和 Wiki 默认贴固定 Wiki 根目录链接，并写清楚以上三个子路径，让用户按 demo 名称进入对应文件夹。只有需要直达子目录时才额外尝试 `rclone link`；如果遇到 Google Drive API rate limit，不要反复重试直达链接。
+
+### seeed 设备环境
+
+```
+~/reCamera_demo/                         ← 工作根目录
+├── <demo_name>/                         ← 如 ppocr_v4、depth_anything
+│   ├── DEPLOY_REPORT.md
+│   ├── <demo_name>_Demo_Wiki.md
+│   ├── models/
+│   └── evidence/
+│       ├── image/
+│       └── video/
+
+~/sscma-example-sg200x/solutions/sesg-project/<demo_name>/  ← 仓库目录
+```
+
 ## 工作流程
 
 ### 1. 搜索知识库
@@ -64,18 +139,144 @@
 - 使用效果图片和视频
 - 写完传回本机
 
+### 8. 上传模型和证据到 Google Drive
+
+在推送 GitHub 前，把本 demo 的模型、完整证据图片、证据视频发布到 Google Drive：
+
+```bash
+# 在 Steven 本机执行，使用已登录的 rclone remote
+rclone listremotes
+rclone lsd agent:reCamera_Shared/Wiki --max-depth 1
+
+# 创建目标目录
+rclone mkdir agent:reCamera_Shared/Wiki/<demo_name>/model/
+rclone mkdir agent:reCamera_Shared/Wiki/<demo_name>/evidence/image/
+rclone mkdir agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/
+
+# 上传模型
+rclone copy <local-model-dir> agent:reCamera_Shared/Wiki/<demo_name>/model/ \
+  --filter "+ *.cvimodel" \
+  --filter "+ *.onnx" \
+  --filter "+ *.pth" \
+  --filter "+ *.pt" \
+  --filter "+ *.json" \
+  --filter "+ *.txt" \
+  --filter "- *" \
+  --progress
+
+# 上传完整证据图片
+rclone copy <local-evidence-image-dir> agent:reCamera_Shared/Wiki/<demo_name>/evidence/image/ \
+  --filter "+ *.png" \
+  --filter "+ *.jpg" \
+  --filter "+ *.jpeg" \
+  --filter "+ *.webp" \
+  --filter "+ *.gif" \
+  --filter "- *" \
+  --progress
+
+# 上传证据视频
+rclone copy <local-evidence-video-dir> agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/ \
+  --filter "+ *.mp4" \
+  --filter "+ *.mov" \
+  --filter "+ *.mkv" \
+  --filter "+ *.webm" \
+  --filter "- *" \
+  --progress
+
+# 核对文件列表
+rclone lsf agent:reCamera_Shared/Wiki/<demo_name>/model/
+rclone lsf agent:reCamera_Shared/Wiki/<demo_name>/evidence/image/
+rclone lsf agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/
+
+# 用未认证 HTTP 请求确认用户能访问固定 Wiki 根目录
+WIKI_ROOT_LINK="https://drive.google.com/drive/folders/1GOQUMCel7fapbJCWzEEynDIvIt-6Wf5p?usp=drive_link"
+curl -L -I "$WIKI_ROOT_LINK"
+```
+
+要求：
+- `agent:` 必须可访问；如果存在但访问失败，在 Steven 本机执行 `rclone config reconnect agent:` 重新授权。
+- 如果 `agent:` 不存在，用 `rclone config` 新建 Google Drive remote，remote 名称固定为 `agent`，scope 使用 `drive`。
+- 上传目录固定为 `agent:reCamera_Shared/Wiki/<demo_name>/model/`、`agent:reCamera_Shared/Wiki/<demo_name>/evidence/image/`、`agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/`，不要改放 GitHub Release 或 LFS。
+- 默认不要为每个 demo 子目录生成独立分享链接；使用固定 Wiki 根目录公开链接，减少 Google Drive API rate limit 风险。
+- `curl -L -I "$WIKI_ROOT_LINK"` 至少能拿到公开 Google Drive 页面响应；如果返回权限错误，必须修复父目录分享权限后再写文档。
+- README 和 Wiki 必须同时包含固定 Wiki 根目录链接、三个子路径、模型文件清单、关键证据图片/视频文件清单。
+
+### 9. 推送到 GitHub
+
+用户确认 demo 和文档无误后，提交并推送到 GitHub：
+
+```bash
+# 在 seeed 上执行（仓库位于 ~/sscma-example-sg200x）
+cd ~/sscma-example-sg200x
+
+# 确保代理已配置（seeed 需要走 Clash 代理访问 GitHub）
+git config --global http.proxy http://127.0.0.1:7890
+git config --global https.proxy http://127.0.0.1:7890
+
+# 拉取最新代码
+git pull origin main
+
+# 复制 wiki 和证据到仓库
+mkdir -p solutions/sesg-project/<demo_name>/wiki
+mkdir -p solutions/sesg-project/<demo_name>/evidence
+
+# 复制 Wiki 文档
+cp ~/reCamera_demo/<demo_name>/<demo_name>_Demo_Wiki.md solutions/sesg-project/<demo_name>/wiki/
+cp ~/reCamera_demo/<demo_name>/DEPLOY_REPORT.md solutions/sesg-project/<demo_name>/wiki/
+
+# 复制证据截图（只复制关键帧，1-3 张）
+cp ~/reCamera_demo/<demo_name>/evidence/image/frame_0000.png solutions/sesg-project/<demo_name>/evidence/
+cp ~/reCamera_demo/<demo_name>/evidence/image/frame_0005.png solutions/sesg-project/<demo_name>/evidence/
+
+# 添加新 demo 文件（不要添加大模型文件）
+git add solutions/sesg-project/<demo_name>/
+
+# 提交
+git commit -m "Add <demo_name> demo with wiki and evidence"
+
+# 推送
+git push origin main
+```
+
+**注意事项：**
+- 不要提交 `.cvimodel`、`.onnx`、`.pth`、`.pt` 等大模型文件到 GitHub
+- 大模型文件必须上传到 `agent:reCamera_Shared/Wiki/<demo_name>/model/`，README 和 Wiki 里写固定 Wiki 根目录公开链接和精确子路径
+- 证据截图只复制关键帧（1-3 张）到 GitHub，完整证据图片上传到 `agent:reCamera_Shared/Wiki/<demo_name>/evidence/image/`
+- 证据视频不提交到 GitHub，上传到 `agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/`
+- 提交前检查 `git status` 确认没有意外文件
+
+## 推送到 GitHub 的内容
+
+| 内容 | 路径 | 说明 |
+|------|------|------|
+| Wiki 文档 | `solutions/sesg-project/<demo>/wiki/<demo>_Demo_Wiki.md` | 公开文档 |
+| 部署报告 | `solutions/sesg-project/<demo>/wiki/DEPLOY_REPORT.md` | 内部报告 |
+| 证据截图 | `solutions/sesg-project/<demo>/evidence/frame_*.png` | 关键帧（1-3 张） |
+| 源代码 | `solutions/sesg-project/<demo>/main/*.cpp` | C++ 代码 |
+| 构建配置 | `solutions/sesg-project/<demo>/CMakeLists.txt` | CMake 配置 |
+| Python 脚本 | `solutions/sesg-project/<demo>/*.py` | 接收器等 |
+| README | `solutions/sesg-project/<demo>/README.md` | 项目说明 |
+
+**不提交到 GitHub：**
+- 完整证据图片，改上传到 `agent:reCamera_Shared/Wiki/<demo>/evidence/image/`
+- 证据视频，改上传到 `agent:reCamera_Shared/Wiki/<demo>/evidence/video/`
+- 模型文件（`.cvimodel`、`.onnx`、`.pth`、`.pt`），改上传到 `agent:reCamera_Shared/Wiki/<demo>/model/`
+- 中间产物（`.mlir`、`.npz`）
+- 校准数据（`calib/`）
+
 面向外部读者的文档硬性要求：
 - README、Wiki、demo 文档和项目源码中的注释/示例命令不要出现 Steven 本机绝对路径，例如 `/home/steven/...`、`/home/steven/work/...`、`/home/steven/下载/...`。
 - 用相对路径、环境变量或占位路径替代，例如 `$REPO_ROOT`、`$SDK_ROOT`、`$TOOLCHAIN_BIN`、`$DEMO_DIR`、`<path-to-model>`。
-- 证据、日志、视频等本机验证产物可以写进内部部署报告，但公开 README/Wiki 只写相对位置或"see the generated evidence video"这类描述。
 - 如果真实命令依赖 Steven 环境，公开文档中使用可迁移的伪命令，并在内部报告另行记录真实路径。
-- 默认不要把 `.cvimodel`、`.onnx`、`.pth`、`.pt` 等大模型文件提交或推送到 GitHub 仓库。公开 README/Wiki 里写模型放置位置、下载链接、Release/LFS 方案或 `<path-to-model>` 占位说明；只有 Steven 明确要求"这次模型也上传"时才强制加入模型文件。
+- 默认不要把 `.cvimodel`、`.onnx`、`.pth`、`.pt` 等大模型文件、完整证据图片或证据视频提交或推送到 GitHub 仓库。必须分别上传到 `agent:reCamera_Shared/Wiki/<demo_name>/model/`、`agent:reCamera_Shared/Wiki/<demo_name>/evidence/image/`、`agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/`，并在公开 README/Wiki 里写固定 Wiki 根目录公开链接、精确子路径和文件清单。不要使用 Release/LFS 作为默认方案，也不要只留下 `<path-to-model>` 占位。
 
 ## 输出
 
 - 设备上部署成功的项目
-- 证据（截图、视频）
-- Wiki 文档（公开读者可复现，不含 Steven 本机绝对路径）
+- 少量关键证据截图 - 提交到 GitHub
+- 完整证据图片和证据视频 - 上传到 Google Drive 并在 README/Wiki 贴公开链接
+- Wiki 文档 - 提交到 GitHub
+- 部署报告 - 提交到 GitHub
 
 ## 引用
 

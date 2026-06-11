@@ -51,9 +51,29 @@ solutions/sesg-project/<demo_name>/
   README.md          # optional short local runbook
 ```
 
-For model demos, place generated models and large evidence files outside the source tree unless they are intentionally part of the repository. In public docs, refer to that location as `$WORK_DIR/<demo_name>` or `<conversion-work-dir>` instead of a local absolute path.
+For model demos, keep generated models, complete evidence images, and evidence videos outside the source tree unless they are intentionally part of the repository. Publish demo assets through Steven's rclone Google Drive remote:
 
-By default, do not commit or push large model binaries such as `.cvimodel`, `.onnx`, `.pth`, or `.pt` to GitHub repositories. Keep them local, publish them through release assets/LFS when explicitly requested, or document them with placeholders such as `<path-to-model>`. Only force-add model files when Steven explicitly says that this specific demo should upload the models.
+```text
+agent:reCamera_Shared/Wiki/<demo_name>/model/
+agent:reCamera_Shared/Wiki/<demo_name>/evidence/image/
+agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/
+```
+
+Public README/Wiki docs must include the generated Google Drive public links from:
+
+```bash
+https://drive.google.com/drive/folders/1GOQUMCel7fapbJCWzEEynDIvIt-6Wf5p?usp=drive_link
+```
+
+Also document the exact child paths:
+
+```text
+/reCamera_Shared/Wiki/<demo_name>/model/
+/reCamera_Shared/Wiki/<demo_name>/evidence/image/
+/reCamera_Shared/Wiki/<demo_name>/evidence/video/
+```
+
+By default, do not commit or push large model binaries such as `.cvimodel`, `.onnx`, `.pth`, or `.pt`, complete evidence image sets, or evidence videos to GitHub repositories. Upload them to the fixed Google Drive asset directories and document the verified Wiki root public link, exact child paths, and exact file names in README/Wiki. Do not use GitHub Release/LFS as the default publishing path.
 
 ## Public Documentation Path Rule
 

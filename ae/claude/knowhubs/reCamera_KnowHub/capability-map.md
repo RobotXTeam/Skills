@@ -2,6 +2,54 @@
 
 这是从 reCamera wiki 集合中蒸馏的知识。它有意不是 wiki 的原始副本。使用它来了解要执行什么能力以及如何验证它。
 
+## Repository Locations
+
+### 本机环境
+
+- 工作目录：`~/work/reCamera_demo/<demo_name>/`
+- 仓库目录：`~/sscma-example-sg200x/solutions/sesg-project/<demo_name>/`
+- Claude skills：`~/.claude/skills/ae/`
+
+现有 demo：
+- `~/work/reCamera_demo/depth_anything/` - Depth Anything 深度估计
+- `~/work/reCamera_demo/ppocr_v4/` - PP-OCRv4 文字识别
+
+### seeed 设备环境
+
+- 工作目录：`~/reCamera_demo/<demo_name>/`
+- 仓库目录：`~/sscma-example-sg200x/solutions/sesg-project/<demo_name>/`
+- 远程：`https://github.com/RobotXTeam/sscma-example-sg200x.git`
+- 认证：GitHub CLI（用户 congchin38-coder）
+- 代理：需要配置 `http://127.0.0.1:7890`（Clash）
+
+### 同步流程
+
+开发完成后，将本地仓库同步到 seeed，再推送到 GitHub：
+
+```bash
+# 1. 本机同步到 seeed
+rsync -avz --exclude='.git' --exclude='*.cvimodel' --exclude='*.onnx' \
+  ~/work/reCamera_demo/<demo_name>/ seeed:~/reCamera_demo/<demo_name>/
+
+# 2. seeed 上复制到仓库
+ssh seeed "
+  cd ~/sscma-example-sg200x
+  mkdir -p solutions/sesg-project/<demo_name>/wiki
+  mkdir -p solutions/sesg-project/<demo_name>/evidence
+  cp ~/reCamera_demo/<demo_name>/<demo_name>_Demo_Wiki.md solutions/sesg-project/<demo_name>/wiki/
+  cp ~/reCamera_demo/<demo_name>/DEPLOY_REPORT.md solutions/sesg-project/<demo_name>/wiki/
+  cp ~/reCamera_demo/<demo_name>/evidence/frame_*.png solutions/sesg-project/<demo_name>/evidence/
+"
+
+# 3. seeed 上提交并推送
+ssh seeed "
+  cd ~/sscma-example-sg200x
+  git add solutions/sesg-project/<demo_name>/
+  git commit -m 'Add <demo_name> demo with wiki and evidence'
+  git push origin main
+"
+```
+
 ## Applications
 
 `AI_Human_Detection_Meshtastic_Broadcast`
