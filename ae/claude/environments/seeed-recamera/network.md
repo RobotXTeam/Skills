@@ -58,7 +58,7 @@ gh ssh-key add ~/.ssh/id_ed25519.pub --title 'seeed-device'
 │       ├── image/                       ← 证据图片（完整图片上传 Google Drive）
 │       └── video/                       ← 证据视频（上传 Google Drive）
 
-~/sscma-example-sg200x/solutions/sesg-project/<demo_name>/  ← 仓库目录
+/home/seeed/sscma-example-sg200x/solutions/sesg-project/<demo_name>/  ← 仓库目录
 ├── CMakeLists.txt
 ├── README.md
 ├── main/*.cpp, *.h
@@ -80,21 +80,21 @@ gh ssh-key add ~/.ssh/id_ed25519.pub --title 'seeed-device'
 │       ├── image/
 │       └── video/
 
-~/sscma-example-sg200x/solutions/sesg-project/<demo_name>/  ← 仓库目录
+/home/seeed/sscma-example-sg200x/solutions/sesg-project/<demo_name>/  ← 仓库目录
 ```
 
 ## GitHub 仓库
 
 seeed 上的仓库位置：
 
-- 仓库：`~/sscma-example-sg200x`
+- 仓库：`/home/seeed/sscma-example-sg200x`
 - 远程：`https://github.com/RobotXTeam/sscma-example-sg200x.git`
 - 认证：GitHub CLI（用户 congchin38-coder）
 
 常用命令：
 
 ```bash
-cd ~/sscma-example-sg200x
+cd /home/seeed/sscma-example-sg200x
 git pull origin main    # 拉取最新
 git push origin main    # 推送更新
 ```

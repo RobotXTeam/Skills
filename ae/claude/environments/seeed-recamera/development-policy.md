@@ -2,24 +2,24 @@
 
 ## Canonical Edit Location
 
-For reCamera C++ demos, the canonical working repository is:
+For reCamera C++ demos, the single canonical working repository — local repo, build location, and source of truth — is:
 
 ```text
-seeed:/home/steven/sscma-example-sg200x
+seeed:/home/seeed/sscma-example-sg200x
 ```
 
-Default behavior for future AE demo work:
+Default behavior for all AE demo work:
 
 - SSH into `seeed`.
 - Create, edit, move, delete, build, and package demo code on `seeed`.
-- Do not modify the local PC copy of `/home/steven/sscma-example-sg200x` unless Steven explicitly asks for local-only work.
+- Everything (the local repository AND every build) lives under `/home/seeed/sscma-example-sg200x`. There is no separate local-PC copy of the repo to keep in sync.
 
 ## New Demo Placement
 
 Create all new reCamera demos under:
 
 ```text
-/home/steven/sscma-example-sg200x/solutions/sesg-project/<demo_name>
+/home/seeed/sscma-example-sg200x/solutions/sesg-project/<demo_name>
 ```
 
 Avoid `solutions/cosg-project` for new demos unless Steven specifically requests it.
@@ -46,10 +46,10 @@ After a demo is finished and Steven approves the effect, commit and push from `s
 
 ## Sync Note
 
-The initial migration copies the local `/home/steven/sscma-example-sg200x` repository to:
+The `seeed` repository at:
 
 ```text
-seeed:/home/steven/sscma-example-sg200x
+seeed:/home/seeed/sscma-example-sg200x
 ```
 
-After that migration, treat the `seeed` copy as the source of truth for future demo source edits.
+is the source of truth for all demo source edits, builds, and commits. Do not maintain a parallel local-PC copy.

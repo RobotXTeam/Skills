@@ -15,9 +15,9 @@ echo "== recamera =="
 echo
 echo "== local toolchain =="
 for p in \
-  /home/steven/host-tools/gcc/riscv64-linux-musl-x86_64/bin/riscv64-unknown-linux-musl-gcc \
-  /home/steven/sg2002_recamera_emmc \
-  /home/steven/sscma-example-sg200x
+  /home/seeed/桌面/host-tools/gcc/riscv64-linux-musl-x86_64/bin/riscv64-unknown-linux-musl-gcc \
+  /home/seeed/桌面/sg2002_recamera_emmc \
+  /home/seeed/sscma-example-sg200x
 do
   if [ -e "$p" ]; then
     echo "OK $p"

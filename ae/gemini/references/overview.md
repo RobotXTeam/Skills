@@ -59,11 +59,11 @@ These are available from `RobotXTeam/sscma-example-sg200x` release `v1.0.1` and 
 
 Check these before downloading:
 
-- `/home/steven/sscma-example-sg200x`
-- `/home/steven/sg2002_recamera_emmc`
-- `/home/steven/host-tools`
-- `/home/steven/work/risc-v/recamera`
-- `/home/steven/reCamera-OS`
+- `/home/seeed/sscma-example-sg200x`
+- `/home/seeed/桌面/sg2002_recamera_emmc`
+- `/home/seeed/桌面/host-tools`
+- `/home/seeed/work/risc-v/recamera`
+- `/home/seeed/reCamera-OS`
 
 ## Evidence Expectations
 

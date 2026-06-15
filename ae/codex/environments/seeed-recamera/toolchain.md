@@ -1,29 +1,26 @@
 # 工具链配置
 
-## 当前开发根目录
+## 唯一开发与编译根目录
 
-默认在 `seeed` 主机上开发和增删 reCamera C++ demo：
+所有 reCamera C++ demo 的代码和编译都在 `seeed` 主机上，统一根目录：
 
-- seeed C++ demo 仓库：`/home/steven/sscma-example-sg200x`
-- 新 demo 默认目录：`/home/steven/sscma-example-sg200x/solutions/sesg-project/<demo_name>`
+- seeed C++ demo 仓库（本地仓库 = 编译位置 = 唯一真源）：`/home/seeed/sscma-example-sg200x`
+- 新 demo 默认目录：`/home/seeed/sscma-example-sg200x/solutions/sesg-project/<demo_name>`
 
-本机 `/home/steven/sscma-example-sg200x` 只作为迁移前副本/参考，除非 Steven 明确要求本机修改，否则不要再在本机直接增删 demo 代码。
+不再保留"本机副本/迁移前参考"这种双份概念。编辑、构建、打包、提交全部在 `seeed` 主机的 `/home/seeed/sscma-example-sg200x` 内完成；本机不再放第二份 demo 仓库。
 
-## 历史本地开发根目录
+## seeed 上的工具链目录
 
-检查这些目录 before downloading：
-
-- `/home/steven/sscma-example-sg200x`
-- `/home/steven/sg2002_recamera_emmc`
-- `/home/steven/host-tools`
-- `/home/steven/work/risc-v/recamera`
-- `/home/steven/reCamera-OS`
+- seeed C++ demo 仓库：`/home/seeed/sscma-example-sg200x`
+- SG200X SDK：`/home/seeed/桌面/sg2002_recamera_emmc`
+- 交叉编译器：`/home/seeed/桌面/host-tools/gcc/riscv64-linux-musl-x86_64/bin/riscv64-unknown-linux-musl-gcc`
+  - 另有一份等价编译器：`/home/seeed/zsz/TOOL/riscv64-linux-musl-x86_64/bin/riscv64-unknown-linux-musl-gcc`
 
 ## C++ 开发环境
 
-- seeed C++ demo 仓库：`/home/steven/sscma-example-sg200x`
-- 本地 SG200X SDK：`/home/steven/sg2002_recamera_emmc`
-- 本地交叉编译器：`/home/steven/host-tools/gcc/riscv64-linux-musl-x86_64/bin/riscv64-unknown-linux-musl-gcc`
+- seeed C++ demo 仓库：`/home/seeed/sscma-example-sg200x`
+- SG200X SDK：`/home/seeed/桌面/sg2002_recamera_emmc`
+- 交叉编译器：`/home/seeed/桌面/host-tools/gcc/riscv64-linux-musl-x86_64/bin/riscv64-unknown-linux-musl-gcc`
 
 ## 模型转换环境
 

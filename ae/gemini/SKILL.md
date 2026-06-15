@@ -55,11 +55,24 @@ Demo 输出工作流中，模型文件、完整证据图片和证据视频不提
 
 - Remote：`agent:`
 - Wiki 根目录公开链接：`https://drive.google.com/drive/folders/1GOQUMCel7fapbJCWzEEynDIvIt-6Wf5p?usp=drive_link`
-- 云端目录：`agent:reCamera_Shared/Wiki/<demo_name>/model/`
+- 运行包目录：`agent:reCamera_Shared/Wiki/<demo_name>/run/`
+- 模型目录：`agent:reCamera_Shared/Wiki/<demo_name>/model/`
 - 证据图片目录：`agent:reCamera_Shared/Wiki/<demo_name>/evidence/image/`
 - 证据视频目录：`agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/`
-- 对外文档默认写法：贴 Wiki 根目录公开链接，并写清楚子路径 `/reCamera_Shared/Wiki/<demo_name>/model/`、`/reCamera_Shared/Wiki/<demo_name>/evidence/image/`、`/reCamera_Shared/Wiki/<demo_name>/evidence/video/`。
-- 对外直达链接：可选。只有需要直达子目录时才分别使用 `rclone link` 为 `model/`、`evidence/image/`、`evidence/video/` 生成公开链接，默认不要设置过期时间。遇到 Google Drive API rate limit 时不要反复重试，直接使用 Wiki 根目录公开链接加子路径。
+- 对外文档默认写法：贴 Wiki 根目录公开链接，并写清楚子路径 `/reCamera_Shared/Wiki/<demo_name>/run/`、`/reCamera_Shared/Wiki/<demo_name>/model/`、`/reCamera_Shared/Wiki/<demo_name>/evidence/image/`、`/reCamera_Shared/Wiki/<demo_name>/evidence/video/`。
+- 对外直达链接：可选。只有需要直达子目录时才分别使用 `rclone link` 为 `run/`、`model/`、`evidence/image/`、`evidence/video/` 生成公开链接，默认不要设置过期时间。遇到 Google Drive API rate limit 时不要反复重试，直接使用 Wiki 根目录公开链接加子路径。
+
+### run/ 开箱即跑包（核心要求）
+
+Google Drive 是给用户拉运行所需文件的地方。**每个 demo 必须有 `run/` 文件夹，让用户拉下来配合 `model/` 就能直接在 reCamera 上跑通，无需编译、不出 Google Drive 就能拿齐运行所需的一切。** `run/` 内容：
+
+- **reCamera 可执行程序**（交叉编译好的 RISC-V ELF，如 `onvif_yolo`、`gb28181_client`、`ppocr-reader`）。一般一个可执行文件即可。
+- **`README.md`**：精简的开箱即跑说明——下载哪些文件（含 `../model/` 的模型）、放到设备什么目录、停哪些服务、完整运行命令（threshold 用 0.60）、怎么验收。面向"拉下来简单看一下就能跑"的用户。
+- **运行时依赖**：仅当系统库不够时才放。例如 GB28181 需要的 SIP 库 `lib/libeXosip2.so.* libosip2.so.* libosipparser2.so.*`；一键脚本如 `run_rtmp.sh` / `run_on_device.sh`。普通 demo 设备自带 `/mnt/system/lib` 等即可，无需额外库。
+- 可执行文件不要 strip 也行，但要确认是设备架构（`file` 应显示 `RISC-V ... ld-musl-riscv64*`）。
+- 模型仍放 `model/`，不要重复塞进 `run/`；README 指引用户把两者放到设备同一目录。
+
+
 
 执行 demo 输出时必须先验证 rclone 登录状态：
 
@@ -85,6 +98,9 @@ curl -L -I "$WIKI_ROOT_LINK"
 上传命令：
 
 ```bash
+rclone copy <local-run-dir> agent:reCamera_Shared/Wiki/<demo_name>/run/ --progress
+rclone lsf -R agent:reCamera_Shared/Wiki/<demo_name>/run/
+
 rclone copy <local-model-dir> agent:reCamera_Shared/Wiki/<demo_name>/model/ --progress
 rclone lsf agent:reCamera_Shared/Wiki/<demo_name>/model/
 
@@ -95,7 +111,7 @@ rclone copy <local-evidence-video-dir> agent:reCamera_Shared/Wiki/<demo_name>/ev
 rclone lsf agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/
 ```
 
-`curl` 应返回可公开打开的 HTTP 响应（例如 200 或 Google Drive 的公开页面跳转）。验证通过后，README 和 Wiki 必须同时贴出 Wiki 根目录公开链接和三个精确子路径；模型部分列出需要下载的模型文件名，证据部分列出关键证据文件名。不要只写 `<path-to-model>` 占位。
+`curl` 应返回可公开打开的 HTTP 响应（例如 200 或 Google Drive 的公开页面跳转）。验证通过后，README 和 Wiki 必须同时贴出 Wiki 根目录公开链接和精确子路径（`run/`、`model/`、`evidence/image/`、`evidence/video/`）；运行包部分列出可执行文件名和 `run/README.md`，模型部分列出需要下载的模型文件名，证据部分列出关键证据文件名。不要只写 `<path-to-model>` 占位。`run/` 必须能让用户拉下来直接跑通。
 
 ## Workflows
 
@@ -133,6 +149,10 @@ rclone lsf agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/
 3. 使用 `environments/seeed-recamera/` 部署项目到设备
 4. 验证输出并录制视频
 5. 使用 `templates/demo-wiki.md` 生成 Wiki 文档
+
+## 默认参数偏好
+
+- **YOLO 检测置信度阈值默认至少 0.60**。所有 reCamera YOLO demo（onvif_yolo / rtmp_yolo / gb28181_yolo 等）启动检测引擎时 threshold 传 0.60 或更高，不要用 0.40/0.45/0.50 这类低值（低阈值误检多、框乱）。文档和脚本的默认值也应为 0.60。例：`run_rtmp.sh <url> 0.60 2`、`rtmp_yolo <model> <url> 0.60 2`、`onvif_yolo <model> 0.60 ...`。
 
 ## Extension
 

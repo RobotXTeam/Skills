@@ -7,14 +7,14 @@ reCamera normally lacks a native C/C++ build environment. Build on Linux, then c
 Common environment:
 
 ```bash
-export SG200X_SDK_PATH=/home/steven/sg2002_recamera_emmc
-export PATH=/home/steven/host-tools/gcc/riscv64-linux-musl-x86_64/bin:$PATH
+export SG200X_SDK_PATH=/home/seeed/桌面/sg2002_recamera_emmc
+export PATH=/home/seeed/桌面/host-tools/gcc/riscv64-linux-musl-x86_64/bin:$PATH
 ```
 
 Build pattern:
 
 ```bash
-cd /home/steven/sscma-example-sg200x/solutions/<solution>
+cd /home/seeed/sscma-example-sg200x/solutions/<solution>
 rm -rf build
 mkdir build
 cd build
@@ -47,7 +47,7 @@ Wiki: distilled directly in `SKILL.md` under `UDP_Face_Analysis`.
 Local source/assets:
 
 ```text
-/home/steven/sscma-example-sg200x/solutions/sesg-project/face_udp/
+/home/seeed/sscma-example-sg200x/solutions/sesg-project/face_udp/
   build/face_udp
   model/yolo-face_mixfp16.cvimodel
   model/age_gender_race_bf16.cvimodel

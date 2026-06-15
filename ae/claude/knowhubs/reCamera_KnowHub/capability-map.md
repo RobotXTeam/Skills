@@ -7,7 +7,7 @@
 ### 本机环境
 
 - 工作目录：`~/work/reCamera_demo/<demo_name>/`
-- 仓库目录：`~/sscma-example-sg200x/solutions/sesg-project/<demo_name>/`
+- 仓库目录：`/home/seeed/sscma-example-sg200x/solutions/sesg-project/<demo_name>/`
 - Claude skills：`~/.claude/skills/ae/`
 
 现有 demo：
@@ -17,7 +17,7 @@
 ### seeed 设备环境
 
 - 工作目录：`~/reCamera_demo/<demo_name>/`
-- 仓库目录：`~/sscma-example-sg200x/solutions/sesg-project/<demo_name>/`
+- 仓库目录：`/home/seeed/sscma-example-sg200x/solutions/sesg-project/<demo_name>/`
 - 远程：`https://github.com/RobotXTeam/sscma-example-sg200x.git`
 - 认证：GitHub CLI（用户 congchin38-coder）
 - 代理：需要配置 `http://127.0.0.1:7890`（Clash）
@@ -33,7 +33,7 @@ rsync -avz --exclude='.git' --exclude='*.cvimodel' --exclude='*.onnx' \
 
 # 2. seeed 上复制到仓库
 ssh seeed "
-  cd ~/sscma-example-sg200x
+  cd /home/seeed/sscma-example-sg200x
   mkdir -p solutions/sesg-project/<demo_name>/wiki
   mkdir -p solutions/sesg-project/<demo_name>/evidence
   cp ~/reCamera_demo/<demo_name>/<demo_name>_Demo_Wiki.md solutions/sesg-project/<demo_name>/wiki/
@@ -43,7 +43,7 @@ ssh seeed "
 
 # 3. seeed 上提交并推送
 ssh seeed "
-  cd ~/sscma-example-sg200x
+  cd /home/seeed/sscma-example-sg200x
   git add solutions/sesg-project/<demo_name>/
   git commit -m 'Add <demo_name> demo with wiki and evidence'
   git push origin main
@@ -51,6 +51,16 @@ ssh seeed "
 ```
 
 ## Applications
+
+`onvif_yolo` / `rtmp_yolo` / `gb28181_yolo`（AI IPC 协议三件套，C++，2026-06 完成）
+- 共同底座：摄像头 CH0 RGB888(640x640 物理地址) → YOLO11n(NPU) 检测 → CH2 H.264 + RGN/OSD 硬件画框(检测框+5x7点阵类别标签) → 推流。复用 `components/SeSg/stream_rtsp` 的 `SesgRtspVpssStreamer`。
+- **关键修复（已提交）**：vendored `stream_rtsp` 的 RGN/OSD 在本 BSP 有两个 bug——overlay attr 必须设 `u32CanvasNum=2`；RGN 只能 attach 到 VPSS(grp0/chn N) 不能 attach VENC（否则内核报 `rgn can only be attached to vpss or vo`）。另外组件需 `-std=gnu++17`（gcc10.2 默认 gnu++14，sscma-micro 用了 is_same_v）。
+- `onvif_yolo`：ONVIF WS-Discovery(UDP组播3702) + Device/Media SOAP(mongoose:8080) + RTSP(8554)。纯 C++ 单进程标准 ONVIF IP 相机。PC 端 `onvif_client.py` 发现+SOAP+拉流。
+- `rtmp_yolo`：检测引擎出本地 RTSP，设备自带 ffmpeg `-c copy` 转封装推 RTMP（设备运行时 libavformat 是裁剪版，进程内推 RTMP 不可靠，故用 ffmpeg binary relay；`run_rtmp.sh` 一键）。验收用 SRS 5。
+- `gb28181_yolo`：GB/T 28181 国标设备端。SIP(eXosip2/osip2，**TCP**)注册+心跳+INVITE应答 + 手写 MPEG-PS muxer + RTP(PT96)/RFC4571/TCP 推媒体。SIP库交叉编译(osip2 5.3.1+eXosip2 5.3.0，riscv64-musl)，运行时 .so 放设备 `lib/`。验收用 SRS 5(`--gb28181=on`，SIP 5060+媒体 9000 都 TCP)，转 RTMP `/live/<设备GBID>`。
+- 三者均已发布：代码+wiki+关键帧到 GitHub `solutions/sesg-project/<demo>`；模型(+gb28181的SIP库)+完整证据到 Drive `reCamera_Shared/Wiki/<demo>/`。
+- 验收平台 SRS 5：seeed docker 容器 `srs-gb`，host 网络，192.168.2.113，端口 1935(RTMP)/8080(HTTP-FLV)/1985(API)/5060(SIP)/9000(GB媒体)。
+- 退出务必 `kill -TERM` 不要 `kill -9`（残留 VPSS 需 reboot）；运行前停 S03node-red/S91sscma-node/S93sscma-supervisor。
 
 `AI_Human_Detection_Meshtastic_Broadcast`
 - 能力：人体检测加 Meshtastic 广播和 UDP 预览。
@@ -95,7 +105,7 @@ ssh seeed "
 `UDP_Face_Analysis`
 - 能力：C++ 人脸检测加年龄/性别/种族/情绪和 UDP 接收器。
 - 已知结果：修复后通过，评分 6/10。
-- 资产：`/home/steven/sscma-example-sg200x/solutions/sesg-project/face_udp`。
+- 资产：`/home/seeed/sscma-example-sg200x/solutions/sesg-project/face_udp`。
 - 官方接收器：`udp_receiver.py`。
 - 工作命令模板：
 
@@ -208,7 +218,7 @@ sudo env LD_LIBRARY_PATH=/mnt/system/lib:/mnt/system/usr/lib:/mnt/system/usr/lib
 
 `reCamera_demo_project_layout`
 - 能力：Steven 当前 reCamera C++ demo 目录规范和项目归档规则。
-- 默认仓库：`seeed:/home/steven/sscma-example-sg200x`。
+- 默认仓库：`seeed:/home/seeed/sscma-example-sg200x`。
 - 新 demo 默认目录：`solutions/sesg-project/<demo_name>`。
 - 参考：`project-layout.md`。
 
