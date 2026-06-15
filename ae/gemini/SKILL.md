@@ -62,6 +62,23 @@ Demo 输出工作流中，模型文件、完整证据图片和证据视频不提
 - 对外文档默认写法：贴 Wiki 根目录公开链接，并写清楚子路径 `/reCamera_Shared/Wiki/<demo_name>/run/`、`/reCamera_Shared/Wiki/<demo_name>/model/`、`/reCamera_Shared/Wiki/<demo_name>/evidence/image/`、`/reCamera_Shared/Wiki/<demo_name>/evidence/video/`。
 - 对外直达链接：可选。只有需要直达子目录时才分别使用 `rclone link` 为 `run/`、`model/`、`evidence/image/`、`evidence/video/` 生成公开链接，默认不要设置过期时间。遇到 Google Drive API rate limit 时不要反复重试，直接使用 Wiki 根目录公开链接加子路径。
 
+## GitHub Completeness Gate
+
+所有推送到 `RobotXTeam/sscma-example-sg200x` 的 demo 代码必须是完整项目代码，不是只保存本机可运行的碎片：
+
+- GitHub 仓库必须包含所有源码、构建脚本、CMake/Make 配置、README、部署脚本和少量关键证据，使外部用户 clone 后可以按文档编译出 reCamera 可执行程序。
+- 大模型、完整证据图片/视频、运行时大库不放 GitHub；必须放到 Google Drive 的固定 `run/`、`model/`、`evidence/` 子目录，并在 README/Wiki 写清楚文件名和路径。
+- 用户 clone GitHub 后，再从 Google Drive 拉取 README/Wiki 指定的模型和必要运行库，应能编译出完整可执行文件，并能部署到 reCamera 正常运行。
+- 不能把只在 Steven 或 seeed 私有绝对路径下存在的文件当作隐式依赖；公开构建命令必须使用相对路径或 `$REPO_ROOT`、`$SDK_ROOT`、`$TOOLCHAIN_BIN`、`$DEMO_DIR` 等可迁移变量。
+
+推送 GitHub 之后、最终发布/写定 Wiki 之前，必须做一次 GitHub 干净克隆验证闭环：
+
+1. 在固定测试线/干净验证目录中从 GitHub 拉取最新 `main`，确认 commit 是刚推送的版本。
+2. 按公开 README/Wiki 的构建命令编译 demo，确认产物是 reCamera 可运行的 RISC-V musl ELF。
+3. 从 Google Drive 拉取该 demo 声明的 `run/`、`model/` 和必要运行库。
+4. 将干净克隆编译出的可执行程序和 Drive 资产部署到 reCamera，按公开运行命令启动并采集验收证据。
+5. 只有 GitHub clone -> Drive assets -> build -> deploy -> run -> evidence 全链路通过，才算一次完整的 demo GitHub 推送；否则回到 `seeed:/home/seeed/sscma-example-sg200x` 修改、重新提交推送，并重复验证直到通过。
+
 ### run/ 开箱即跑包（核心要求）
 
 Google Drive 是给用户拉运行所需文件的地方。**每个 demo 必须有 `run/` 文件夹，让用户拉下来配合 `model/` 就能直接在 reCamera 上跑通，无需编译、不出 Google Drive 就能拿齐运行所需的一切。** `run/` 内容：

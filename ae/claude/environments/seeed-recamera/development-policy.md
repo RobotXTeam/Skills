@@ -44,6 +44,30 @@ gh auth status
 
 After a demo is finished and Steven approves the effect, commit and push from `seeed` directly to GitHub. Do not push demo work before Steven approval.
 
+## Post-Push Verification Gate
+
+Pushing to GitHub is not the end of a demo. A demo is complete only after the pushed GitHub version passes a clean verification loop.
+
+Required sequence after `git push origin main`:
+
+1. Clone the latest GitHub `main` into a clean temporary verification directory. Do not reuse the working repository.
+2. Confirm the clean clone commit is the commit just pushed from `seeed`.
+3. Build the demo using only the public README/Wiki command. The command must not require undocumented flags or private absolute paths.
+4. Verify the executable with `file`; it must be a reCamera-compatible RISC-V musl ELF.
+5. Pull the required `run/`, `model/`, and runtime library assets from Steven's Google Drive remote paths documented for the demo.
+6. Deploy the clean-clone executable and Drive assets to reCamera.
+7. Run the demo with the documented public command and collect evidence.
+
+If this loop fails at any step, return to:
+
+```text
+seeed:/home/seeed/sscma-example-sg200x
+```
+
+Fix the source, scripts, README/Wiki, or Google Drive asset publication, then commit, push, and repeat the clean verification loop. Do not finalize or publish the Wiki until the loop passes.
+
+The GitHub repository must contain complete buildable source code. Large models, complete evidence sets, evidence videos, and large runtime libraries can live in Google Drive, but every such external asset must be listed in README/Wiki with exact filenames and fixed child paths.
+
 ## Sync Note
 
 The `seeed` repository at:
