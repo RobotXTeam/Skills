@@ -24,14 +24,14 @@
 
 ### 同步流程
 
-开发完成后，将本地仓库同步到 seeed，再推送到 GitHub：
+所有 reCamera C++ demo 的代码编写和编译都在 `seeed` 主机上。开发完成后，将 seeed 上的工作目录同步到 Steven 本机（作为备份），然后在 seeed 上推送到 GitHub：
 
 ```bash
-# 1. 本机同步到 seeed
+# 1. seeed 同步到本机（备份）
 rsync -avz --exclude='.git' --exclude='*.cvimodel' --exclude='*.onnx' \
-  ~/work/reCamera_demo/<demo_name>/ seeed:~/reCamera_demo/<demo_name>/
+  seeed:~/reCamera_demo/<demo_name>/ ~/work/reCamera_demo/<demo_name>/
 
-# 2. seeed 上复制到仓库
+# 2. seeed 上复制到仓库并推送
 ssh seeed "
   cd /home/seeed/sscma-example-sg200x
   mkdir -p solutions/sesg-project/<demo_name>/wiki
@@ -39,11 +39,6 @@ ssh seeed "
   cp ~/reCamera_demo/<demo_name>/<demo_name>_Demo_Wiki.md solutions/sesg-project/<demo_name>/wiki/
   cp ~/reCamera_demo/<demo_name>/DEPLOY_REPORT.md solutions/sesg-project/<demo_name>/wiki/
   cp ~/reCamera_demo/<demo_name>/evidence/frame_*.png solutions/sesg-project/<demo_name>/evidence/
-"
-
-# 3. seeed 上提交并推送
-ssh seeed "
-  cd /home/seeed/sscma-example-sg200x
   git add solutions/sesg-project/<demo_name>/
   git commit -m 'Add <demo_name> demo with wiki and evidence'
   git push origin main

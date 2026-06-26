@@ -3,6 +3,7 @@
 ## 目的
 
 根据想法或开源项目，使用知识库部署到设备上，验证部署成功，录制运行效果，生成 Wiki 文档(要用户确认录制的视频效果ok之后再生成wiki文档)。
+必须完全执行 ## 工作流程（必须强制要求逐步完成所有步骤，不能跳步）
 
 ## 输入
 
@@ -85,7 +86,7 @@ GitHub 代码完整性要求：
 - 大模型、完整证据图片/视频、大型运行时库不要提交 GitHub，但 README/Wiki 必须写清楚它们在 Google Drive 的固定路径和文件名。用户 clone GitHub 后，从 Google Drive 拉取这些文件，就应能编译、部署并运行。
 - 不能依赖未提交的本机文件、未记录的手工复制步骤或 Steven/seeed 私有绝对路径。
 
-### seeed 设备环境
+### seeed 设备环境（编写、编译代码和推仓库的地方）
 
 ```
 ~/reCamera_demo/                         ← 工作根目录
@@ -100,7 +101,18 @@ GitHub 代码完整性要求：
 /home/seeed/sscma-example-sg200x/solutions/sesg-project/<demo_name>/  ← 仓库目录
 ```
 
-## 工作流程
+## 工作流程（必须强制要求逐步完成所有步骤，不能跳步）
+
+### 0. 检查历史记录
+
+在开始执行前，读取 `success-records.md`，检查是否有可参考的历史记录：
+
+- 是否有类似 demo 的成功记录
+- 是否有相同模型或相同类型 demo 的经验
+- 是否有可复用的编译问题解决方案
+- 是否有特殊依赖或配置的记录
+
+如果有相关记录，参考其经验，避免重复踩坑。
 
 ### 1. 搜索知识库
 
@@ -135,8 +147,10 @@ GitHub 代码完整性要求：
 - 检查日志文件
 - 验证功能是否正常
 
+### 5. 多模态检验
+- 使用多模态功能读输出的截图和内容是否对的上，如果你发现输出的内容和本demo要的结果不同，说明其实你跑通了流程，但是代码是不对的，你要的不仅仅是“跑通”，而是“跑好”，要验证你这个demo输出的东西是客户想要的，而不是仅仅跑通
 
-### 5. 录制视频流和图片
+### 6. 录制视频流和图片
 
 录制设备的运行效果：
 - 使用主机拉取设备的视频流
@@ -144,14 +158,17 @@ GitHub 代码完整性要求：
 - 传回本机
 - 录制视频流和图片必须要有足够的证据，比如实时osd检测框或者osd数据在画面上，或者导出来在seeed主机上去加，但总之用户看到视频之后就直接能看到这个demo的视觉效果，要让用户知道，原来这个demo的作用是这样的
 
-### 6. 用户审核
+### 7. 多模态检验
+- 使用多模态功能读输出的视频、图片和内容是否对的上，如果你发现输出的内容和本demo要的结果不同，说明其实你跑通了流程，但是代码是不对的，你要的不仅仅是“跑通”，而是“跑好”，要验证你这个demo输出的东西是客户想要的，而不是仅仅跑通
+
+### 8. 用户审核
 
 在本机打开视频，由用户审核：
 - 内容是否正确
 - 效果是否通过
 - 是否需要调整
 
-### 7. 生成 Wiki 草稿文档
+### 9. 生成 Wiki 草稿文档
 
 如果用户审核通过，先生成 Wiki 草稿文档。注意：此时只能作为草稿，不要最终发布/写定 Wiki；最终 Wiki 必须等 GitHub 干净克隆验证闭环通过后再确认。
 
@@ -162,7 +179,7 @@ GitHub 代码完整性要求：
 - 写完传回本机
 - README/Wiki 草稿必须写清楚：GitHub 源码路径、Google Drive 根目录链接、`run/`、`model/`、`evidence/image/`、`evidence/video/` 精确子路径、运行包文件名、模型文件名、必要运行库文件名、公开构建命令和公开运行命令。
 
-### 8. 上传运行包、模型和证据到 Google Drive
+### 10. 上传运行包、模型和证据到 Google Drive
 
 在推送 GitHub 前，把本 demo 的**运行包(run/)**、模型、完整证据图片、证据视频发布到 Google Drive。`run/` 让用户拉下来直接在 reCamera 跑通：
 
@@ -237,7 +254,7 @@ curl -L -I "$WIKI_ROOT_LINK"
 - README 和 Wiki 必须同时包含固定 Wiki 根目录链接、四个子路径（run/model/image/video）、`run/` 可执行文件名、模型文件清单、关键证据图片/视频文件清单。
 
 
-### 9. 推送到 GitHub
+### 11. 推送到 GitHub
 
 用户确认 demo 和文档无误后，提交并推送到 GitHub：
 
@@ -281,7 +298,7 @@ git push origin main
 - 证据视频不提交到 GitHub，上传到 `agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/`
 - 提交前检查 `git status` 确认没有意外文件
 
-### 10. GitHub 干净克隆验证闭环
+### 12. GitHub 干净克隆验证闭环
 
 推送到 GitHub 后，**不要立即把 Wiki 当作最终完成**。必须在固定测试线/干净验证目录中拉取刚推送的 GitHub 版本，验证外部用户路径是否完整。
 
@@ -337,14 +354,34 @@ rclone copy agent:reCamera_Shared/Wiki/<demo_name>/model/ "$VERIFY_ROOT/model/" 
 - reCamera 部署路径和公开运行命令。
 - 验收证据文件名和保存位置。
 
-### 11. 最终写定 Wiki
+### 13. 最终写定 Wiki
 
 只有第 10 步验证闭环通过后，才可以把 Wiki 草稿写定为最终 Wiki：
 
-- 不要写“理论可运行”或“本机验证通过”；必须写清楚 GitHub 干净 clone 后的真实验证结果。
+- 不要写”理论可运行”或”本机验证通过”；必须写清楚 GitHub 干净 clone 后的真实验证结果。
 - Wiki 中的构建命令、部署命令、运行命令必须与闭环验证中实际使用的公开命令一致。
 - Wiki 中的 Google Drive 路径必须能让用户拿到所有 GitHub 不提交但运行必需的模型和库。
 - 如果验证过程中发现 README/Wiki 命令不完整，必须先修 GitHub 代码或文档，重新推送并重跑第 10 步。
+
+### 14. 更新成功记录
+
+**只有完成上述全部 13 步，才能执行此步骤。**
+
+如果用户中途停止、某一步失败、用户未审核通过、或 GitHub 验证闭环未通过，则**不写入成功记录**。
+
+完成全部 13 步后，更新 `success-records.md`：
+
+```markdown
+### <demo_name> (<date>)
+- 状态：✅ 成功
+- GitHub commit：<short_hash>
+- Google Drive 路径：`agent:reCamera_Shared/Wiki/<demo_name>/`
+- 模型文件：<model_files>
+- 特殊依赖：<dependencies or “无”>
+- 编译问题：<problem and solution or “无”>
+- 验证结果：<verification_summary>
+- 关键经验：<lessons_learned or “无”>
+```
 
 ## 推送到 GitHub 的内容
 

@@ -1,25 +1,24 @@
 ---
 name: ae
-description: "AE Agent for Seeed reCamera: wiki QA evaluation, technical support for售后邮件/问题询盘, demo deployment and wiki generation. Trigger when the user mentions reCamera wiki validation, technical support, demo deployment, or asks to evaluate/score a reCamera wiki, diagnose reCamera issues, or deploy projects to reCamera."
+description: "AE Agent for Seeed reCamera: demo deployment and wiki generation. Trigger when the user mentions reCamera demo deployment, asks to deploy projects to reCamera, or generate wiki documentation for reCamera demos."
 ---
 
 # AE Agent
 
+## Essential Warning
+必须明确一点，这个skill是要求把demo部署到reCamera上，不是本机，也不是seeed主机，一定是部署到reCamera上！！！
+
 ## Purpose
+AE Agent 是一个自动化工程代理，用于根据知识库部署项目到 reCamera 设备，验证部署成功，录制运行效果，并生成 Wiki 文档。
 
-AE Agent 是一个完整的自动化工程代理，具有三大核心能力：
 
-1. **Wiki QA（Wiki 评价）**：评估 wiki 页面的可复现性
-2. **Technical Support（技术支持）**：处理售后邮件/问题询盘，诊断问题并提供解决方案
-3. **Demo Output（Demo 输出）**：根据知识库部署项目到设备并生成 Wiki 文档
+## 执行入口
 
-## Workflow Selection
+当此 skill 被调用时，必须：
 
-根据用户输入自动选择工作流：
-
-- Wiki 相关关键词（wiki、评价、评分、复现性）→ Wiki QA 工作流
-- 问题相关关键词（问题、故障、错误、售后、询盘）→ 技术支持工作流
-- 部署相关关键词（部署、demo、项目、想法）→ Demo 输出工作流
+1. **读取 ARGUMENTS**：位于 SKILL.md 末尾，包含用户的输入
+2. **确认工作流**：此 skill 仅支持 Demo Output 工作流
+3. **执行工作流**：严格按照 `workflows/demo-output.md` 步骤执行
 
 ## Knowledge Hubs
 
@@ -45,8 +44,6 @@ AE Agent 是一个完整的自动化工程代理，具有三大核心能力：
 
 模板文件用于生成标准化输出：
 
-- `templates/wiki-report.md` - Wiki QA 报告模板
-- `templates/tech-support-reply.md` - 技术支持回复模板
 - `templates/demo-wiki.md` - Demo Wiki 模板
 
 ## Cloud Asset Publishing
@@ -134,29 +131,17 @@ rclone lsf agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/
 
 工作流文件定义了具体的执行流程：
 
-- `workflows/wiki-qa.md` - Wiki QA 工作流
-- `workflows/tech-support.md` - 技术支持工作流
 - `workflows/demo-output.md` - Demo 输出工作流
 
+## Success Records
+
+成功记录文件记录每次完整执行 Demo 输出工作流（全部 13 步）并成功完成的 demo：
+
+- `success-records.md` - Demo 成功记录
+
+**重要**：只有完成全部 13 步（从搜索知识库到最终写定 Wiki）才能写入成功记录。用户中途停止、某一步失败、或 GitHub 验证闭环未通过，都不算成功，不写入记录。
+
 ## Usage
-
-### Wiki QA
-
-当用户要求评估 wiki 页面时：
-1. 读取 `workflows/wiki-qa.md`
-2. 引用 `knowhubs/reCamera_KnowHub/capability-map.md`
-3. 使用 `environments/seeed-recamera/` 连接设备
-4. 按照工作流执行评估
-5. 使用 `templates/wiki-report.md` 生成报告
-
-### Technical Support
-
-当用户提供问题描述时：
-1. 读取 `workflows/tech-support.md`
-2. 搜索 `knowhubs/reCamera_KnowHub/` 寻找类似问题
-3. 使用 `environments/seeed-recamera/` 连接设备复现问题
-4. 诊断根因并提出解决方案
-5. 使用 `templates/tech-support-reply.md` 生成回复
 
 ### Demo Output
 

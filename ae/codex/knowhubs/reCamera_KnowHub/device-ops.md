@@ -7,7 +7,7 @@
 - 关键 web 路由：`/#/init`、`/#/workspace`、`/#/network`、`/#/security`、`/#/terminal`、`/#/system`、`/#/power`。
 - 原始 Node-RED UI：`http://192.168.42.1:1880`。
 - SSH 用户/密码：`recamera` / `recamera.1`。
-- Steven 的桥接主机：`seeed`，Tailscale `100.76.45.91`，LAN `192.168.4.7`，密码 `0`。
+- Steven 的桥接主机：`seeed`，Tailscale `192.168.2.113`，LAN `192.168.4.7`，more`10.88.222.222`密码 `0`。
 
 ## OS 和服务
 
