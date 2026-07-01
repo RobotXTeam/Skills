@@ -2,6 +2,11 @@
 #   HostName 192.168.14.56
 #   User steven
 
+Host recamera-pro
+  HostName 192.168.4.200 #192.168.2.113
+  User root
+#密码 recamera.1
+
 Host openwrt
   HostName 100.90.115.46
   User root
@@ -18,7 +23,7 @@ Host qiang
 #密码 1
 
 Host seeed
-  HostName 192.168.2.113 #192.168.4.7 10.88.222.222
+  HostName 192.168.4.7 #100.76.45.91 192.168.2.113
   User seeed
 #密码 0
 
