@@ -46,4 +46,32 @@
 
 ## 成功记录
 
-（暂无记录）
+### rtmp_yolo (2026-06-29)
+- 状态：✅ 成功
+- GitHub commit：5bc7f07
+- Google Drive 路径：`agent:reCamera_Shared/Wiki/rtmp_yolo/`
+- 模型文件：yolo11n_detection_cv181x_int8.cvimodel
+- 特殊依赖：无
+- 编译问题：无
+- 验证结果：通过
+- 关键经验：阈值 0.60, 使用 ffmpeg copy 直推流无重编码, rtmp验证通过
+
+### onvif_yolo (2026-06-29)
+- 状态：✅ 成功
+- GitHub commit：5bc7f07
+- Google Drive 路径：`agent:reCamera_Shared/Wiki/onvif_yolo/`
+- 模型文件：yolo11n_detection_cv181x_int8.cvimodel
+- 特殊依赖：无
+- 编译问题：无
+- 验证结果：通过
+- 关键经验：阈值 0.60, RGN/OSD硬件叠加画框验证通过
+
+### gb28181_yolo (2026-06-29)
+- 状态：✅ 成功
+- GitHub commit：5bc7f07
+- Google Drive 路径：`agent:reCamera_Shared/Wiki/gb28181_yolo/`
+- 模型文件：yolo11n_detection_cv181x_int8.cvimodel
+- 特殊依赖：eXosip2, osip2 (SIP库)
+- 编译问题：无
+- 验证结果：通过
+- 关键经验：阈值 0.60, 国标 GB28181 推流验证通过
