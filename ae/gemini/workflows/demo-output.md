@@ -296,7 +296,7 @@ rclone lsd agent:reCamera_Shared/Wiki --max-depth 1
 
 # 准备 run/ 开箱即跑包（本机目录，例如 <demo>/run/）：
 #   - reCamera 可执行程序（交叉编译好的 RISC-V ELF，file 应显示 ld-musl-riscv64*）
-#   - README.md（精简开箱即跑说明：下载哪些文件、放设备哪、停服务、运行命令 threshold 0.60、验收）
+#   - README.md（精简开箱即跑说明：下载哪些文件、放设备哪、停服务、实测采用的 threshold、验收）
 #   - 必要运行时依赖（普通 demo 无需；GB28181 类带 lib/*.so + 一键脚本）
 
 # 创建目标目录

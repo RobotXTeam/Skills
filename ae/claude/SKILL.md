@@ -81,7 +81,7 @@ Demo 输出工作流中，模型文件、完整证据图片和证据视频不提
 Google Drive 是给用户拉运行所需文件的地方。**每个 demo 必须有 `run/` 文件夹，让用户拉下来配合 `model/` 就能直接在 reCamera 上跑通，无需编译、不出 Google Drive 就能拿齐运行所需的一切。** `run/` 内容：
 
 - **reCamera 可执行程序**（交叉编译好的 RISC-V ELF，如 `onvif_yolo`、`gb28181_client`、`ppocr-reader`）。一般一个可执行文件即可。
-- **`README.md`**：精简的开箱即跑说明——下载哪些文件（含 `../model/` 的模型）、放到设备什么目录、停哪些服务、完整运行命令（threshold 用 0.60）、怎么验收。面向"拉下来简单看一下就能跑"的用户。
+- **`README.md`**：精简的开箱即跑说明——下载哪些文件（含 `../model/` 的模型）、放到设备什么目录、停哪些服务、完整运行命令（threshold 使用实测效果最好的值，优先从相对较低置信度起步调参）、怎么验收。面向"拉下来简单看一下就能跑"的用户。
 - **运行时依赖**：仅当系统库不够时才放。例如 GB28181 需要的 SIP 库 `lib/libeXosip2.so.* libosip2.so.* libosipparser2.so.*`；一键脚本如 `run_rtmp.sh` / `run_on_device.sh`。普通 demo 设备自带 `/mnt/system/lib` 等即可，无需额外库。
 - 可执行文件不要 strip 也行，但要确认是设备架构（`file` 应显示 `RISC-V ... ld-musl-riscv64*`）。
 - 模型仍放 `model/`，不要重复塞进 `run/`；README 指引用户把两者放到设备同一目录。
@@ -165,7 +165,7 @@ rclone lsf agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/
 
 ## 默认参数偏好
 
-- **YOLO 检测置信度阈值默认至少 0.60**。所有 reCamera YOLO demo（onvif_yolo / rtmp_yolo / gb28181_yolo 等）启动检测引擎时 threshold 传 0.60 或更高，不要用 0.40/0.45/0.50 这类低值（低阈值误检多、框乱）。文档和脚本的默认值也应为 0.60。例：`run_rtmp.sh <url> 0.60 2`、`rtmp_yolo <model> <url> 0.60 2`、`onvif_yolo <model> 0.60 ...`。
+- **YOLO 检测置信度阈值不要固定为某个值**。所有 reCamera YOLO demo（onvif_yolo / rtmp_yolo / gb28181_yolo 等）应根据固定评测输入、baseline 对齐结果和最终视频效果调参，优先使用相对较低的置信度起步以保证目标能被检出，再用 NMS、类别过滤和多模态复核控制误检。文档和脚本不要写死置信度数值；必须写清楚本 demo 实测采用的 threshold、选择原因、效果截图/视频和质量报告结论。示例写法：`run_rtmp.sh <url> <threshold> 2`、`rtmp_yolo <model> <url> <threshold> 2`、`onvif_yolo <model> <threshold> ...`。
 
 ## Extension
 
