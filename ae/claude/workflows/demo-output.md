@@ -21,6 +21,11 @@
 │   ├── <demo_name>_Demo_Wiki.md         ← Wiki 文档
 │   ├── models/                          ← 模型文件（不提交Github，上传 Google Drive）
 │   ├── calib/                           ← 校准数据（不提交Github，上传 Google Drive）
+│   ├── eval/                            ← 质量基准评测产物
+│   │   ├── input/                       ← 固定评测输入（图片/视频/manifest）
+│   │   ├── baseline/                    ← seeed NVIDIA 主机 Python baseline 输出
+│   │   ├── recamera/                    ← reCamera 同输入推理输出
+│   │   └── qa_report.md                 ← 帧级对齐评分报告
 │   └── evidence/
 │       ├── image/                       ← 证据图片（关键帧提交Github，完整图片上传 Google Drive）
 │       │   ├── frame_0000.png
@@ -38,7 +43,8 @@
 ├── *.py                                 ← ✅ 提交
 ├── wiki/                                ← ✅ 提交
 │   ├── <demo_name>_Demo_Wiki.md
-│   └── DEPLOY_REPORT.md
+│   ├── DEPLOY_REPORT.md
+│   └── qa_report.md                     ← ✅ 提交，baseline/reCamera 对齐评分摘要
 ├── evidence/                            ← ✅ 提交少量关键截图
 │   └── frame_*.png                      ← 只提交关键帧（5-10 张）
 └── model/                               ← ❌ .gitignore 忽略；模型发布到 Google Drive
@@ -94,6 +100,7 @@ GitHub 代码完整性要求：
 │   ├── DEPLOY_REPORT.md
 │   ├── <demo_name>_Demo_Wiki.md
 │   ├── models/
+│   ├── eval/
 │   └── evidence/
 │       ├── image/
 │       └── video/
@@ -131,44 +138,142 @@ GitHub 代码完整性要求：
 - 运行和验证
 
 
-### 3. 部署到设备
+### 3. 准备固定评测输入
+
+所有视觉类 demo 在部署验收前，必须先准备固定评测输入，不能只用实时摄像头做效果判断。输入保存在：
+
+```text
+~/reCamera_demo/<demo_name>/eval/input/
+├── images/                  # 固定图片样本，可为空但视觉 demo 推荐保留
+├── video/input.mp4          # 固定视频样本，可由 reCamera 先录制原始视频得到
+└── manifest.json            # 输入清单、样本说明、正负样本和边界样本标注
+```
+
+要求：
+- 同一批输入必须同时用于 seeed NVIDIA 主机 Python baseline 和 reCamera 推理。
+- 样本必须包含正样本、负样本和边界样本；例如检测类 demo 不能只放目标存在的画面，也要放无目标、遮挡、小目标、多人/多物、低光照等场景。
+- 如果 demo 的核心卖点是实时摄像头，也要先录制一段原始输入视频，再作为固定视频输入跑 baseline 和 reCamera。
+- 所有视觉类 demo 的代码都必须保留三种输入：reCamera 实时相机、本地视频、本地图片。
+
+### 4. 在 seeed NVIDIA 主机运行官方 Python baseline
+
+在 seeed 主机上使用开源项目官方 Python 示例或官方推荐推理脚本跑同一批固定输入，作为 teacher reference。这个结果不是绝对真值，但它代表原始模型在标准 NVIDIA/Python 链路下的预期效果。
+
+输出保存在：
+
+```text
+~/reCamera_demo/<demo_name>/eval/baseline/
+├── frames/                  # baseline 输入帧拷贝或抽帧
+├── visualized/              # baseline 可视化结果帧
+├── baseline.jsonl           # 每帧结构化结果
+└── baseline.mp4             # baseline 可视化视频
+```
+
+要求：
+- 优先运行官方 demo 原始代码；不要为了省事重写一个行为不一致的简化推理脚本。
+- 必须记录 Python 环境、依赖版本、模型文件、运行命令和关键参数。
+- `baseline.jsonl` 必须使用稳定结构保存每帧结果，便于与 reCamera 输出做自动对齐。
+- 检测类建议结构：
+
+```json
+{"frame": 12, "objects": [{"cls": "person", "conf": 0.91, "box": [120, 80, 260, 340]}]}
+```
+
+### 5. 部署到 reCamera
 
 执行部署步骤：
-- 使用环境配置连接到设备
-- 按照规划的步骤操作
-- 记录每个步骤的结果
-- 所有的视觉类demo的代码都需要的三个输入，一个是直接用reCamera的相机进行录制输入，二是留一个是本地视频输入，三是本地图片输入
-- 所有的demo可执行程序在reCaera上运行时都要用sudo去执行
+- 使用环境配置连接到设备。
+- 按照规划的步骤操作。
+- 记录每个步骤的结果。
+- 所有 demo 可执行程序在 reCamera 上运行时都要用 `sudo` 执行。
+- 部署结果必须能处理第 3 步准备的本地图片和本地视频输入，不能只支持实时摄像头。
 
-### 4. 验证输出
+### 6. reCamera 使用同一输入运行推理
 
-验证部署是否成功：
-- 截图查看输出内容
-- 检查日志文件
-- 验证功能是否正常
+在 reCamera 上使用第 3 步同一批固定输入运行推理，并导出与 baseline 可对齐的结果。
 
-### 5. 多模态检验
-- 使用多模态功能读输出的截图和内容是否对的上，如果你发现输出的内容和本demo要的结果不同，说明其实你跑通了流程，但是代码是不对的，你要的不仅仅是“跑通”，而是“跑好”，要验证你这个demo输出的东西是客户想要的，而不是仅仅跑通
+输出保存在：
 
-### 6. 录制视频流和图片
+```text
+~/reCamera_demo/<demo_name>/eval/recamera/
+├── frames/                  # reCamera 输入帧拷贝或抽帧
+├── visualized/              # reCamera 可视化结果帧
+├── recamera.jsonl           # 每帧结构化结果
+└── recamera.mp4             # reCamera 可视化视频
+```
+
+要求：
+- reCamera 的图片/视频输入必须与 baseline 使用完全相同的文件。
+- reCamera 输出 JSONL 字段要尽量与 `baseline.jsonl` 对齐；检测框坐标必须还原到原图坐标系。
+- 必须保存日志、启动命令、模型路径、阈值、NMS、输入尺寸、label map 等关键参数。
+
+### 7. 自动对齐评分与质量门判断
+
+对 `baseline.jsonl` 和 `recamera.jsonl` 做帧级对齐评分，生成：
+
+```text
+~/reCamera_demo/<demo_name>/eval/qa_report.md
+~/reCamera_demo/<demo_name>/eval/qa_report.json
+~/reCamera_demo/<demo_name>/eval/failures/
+```
+
+默认质量门：
+- 检测类：class match + IoU >= 0.5，计算 precision / recall / F1；默认要求 `F1 >= 0.60` 且关键类别 `recall >= 0.60`。
+- OCR 类：文本相似度、字符准确率和关键字段命中率；默认要求核心文本相似度 `>= 0.60`。
+- 分类类：top-1 或 top-5 一致率；默认要求 top-1 一致率 `>= 0.60`。
+- 分割类：mIoU 或 mask overlap；默认要求核心区域指标 `>= 0.60`。
+- 关键点/姿态类：关键点距离误差或 PCK；阈值必须在报告中说明。
+- 深度/光流/生成类等难以直接结构化的 demo：必须定义可解释指标，并结合 baseline/reCamera 视频做多模态复核；不能只写“看起来正常”。
+
+要求：
+- `qa_report.md` 必须写清楚输入样本数、通过帧数、失败帧、主要失败原因和最终是否通过质量门。
+- 评分未通过时，不能进入录制、用户审核、Wiki 草稿、上传或 GitHub 推送，需检查是不是代码问题或者模型问题，直到评分通过为止。
+- 如果某类 demo 无法自动评分，必须在报告中说明原因，并用固定输入的 baseline 视频、reCamera 视频和多模态分析替代；替代方案也必须给出明确通过/失败结论。
+
+### 8. 效果问题修复循环
+
+如果第 7 步质量门未通过，必须先修复效果问题，再重新执行第 4-7 步，直到通过或明确判定该 demo 不适合继续。
+
+优先排查：
+- 输入尺寸、resize、letterbox 和坐标还原。
+- RGB/BGR、归一化、均值方差、CHW/HWC、量化输入范围。
+- label map 顺序、类别过滤、阈值、NMS、top-k。
+- 模型转换精度、量化校准数据、后处理公式。
+- reCamera C++ 后处理与官方 Python baseline 是否一致。
+
+如果多次修复后仍无法达到默认质量门，必须停止发布流程，在 `DEPLOY_REPORT.md` 中记录失败原因和可复现证据，不写成功记录。
+
+### 9. 多模态检验
+
+使用多模态功能读取并对比以下材料：
+- `eval/baseline/baseline.mp4`
+- `eval/recamera/recamera.mp4`
+- `eval/qa_report.md`
+- `eval/failures/` 中的失败帧
+
+判断输出是否与本 demo 的目标一致。这里验证的是“跑好”，不是仅仅“跑通”。如果输出内容和本 demo 要的结果不同，即使程序没有报错，也必须回到第 8 步修复。
+
+### 10. 录制视频流和图片
 
 录制设备的运行效果：
-- 使用主机拉取设备的视频流
-- 录制视频窗口
-- 传回本机
-- 录制视频流和图片必须要有足够的证据，比如实时osd检测框或者osd数据在画面上，或者导出来在seeed主机上去加，但总之用户看到视频之后就直接能看到这个demo的视觉效果，要让用户知道，原来这个demo的作用是这样的
+- 使用主机拉取设备的视频流。
+- 录制视频窗口。
+- 传回本机。
+- 录制视频流和图片必须要有足够的证据，比如实时 OSD 检测框或者 OSD 数据在画面上，或者导出来在 seeed 主机上叠加。用户看到视频后应能直接理解这个 demo 的视觉效果。
+- 最终证据视频应优先使用第 7 步质量门已通过的模型、阈值、NMS 和后处理参数。
 
-### 7. 多模态检验
-- 使用多模态功能读输出的视频、图片和内容是否对的上，如果你发现输出的内容和本demo要的结果不同，说明其实你跑通了流程，但是代码是不对的，你要的不仅仅是“跑通”，而是“跑好”，要验证你这个demo输出的东西是客户想要的，而不是仅仅跑通
+### 11. 多模态检验
 
-### 8. 用户审核
+使用多模态功能读取输出的视频、图片、baseline 对比结果和评分报告，确认内容是否对得上客户想要的效果。如果发现视频展示效果与第 7 步评分结论矛盾，必须回到第 8 步修复，不能继续发布。
+
+### 12. 用户审核
 
 在本机打开视频，由用户审核：
 - 内容是否正确
 - 效果是否通过
 - 是否需要调整
 
-### 9. 生成 Wiki 草稿文档
+### 13. 生成 Wiki 草稿文档
 
 如果用户审核通过，先生成 Wiki 草稿文档。注意：此时只能作为草稿，不要最终发布/写定 Wiki；最终 Wiki 必须等 GitHub 干净克隆验证闭环通过后再确认。
 
@@ -178,8 +283,9 @@ GitHub 代码完整性要求：
 - 使用效果图片和视频
 - 写完传回本机
 - README/Wiki 草稿必须写清楚：GitHub 源码路径、Google Drive 根目录链接、`run/`、`model/`、`evidence/image/`、`evidence/video/` 精确子路径、运行包文件名、模型文件名、必要运行库文件名、公开构建命令和公开运行命令。
+- README/Wiki 草稿必须包含质量基准摘要：固定输入来源、baseline 命令、reCamera 命令、评分指标、通过阈值、实际得分、关键失败样本说明（如有）。
 
-### 10. 上传运行包、模型和证据到 Google Drive
+### 14. 上传运行包、模型和证据到 Google Drive
 
 在推送 GitHub 前，把本 demo 的**运行包(run/)**、模型、完整证据图片、证据视频发布到 Google Drive。`run/` 让用户拉下来直接在 reCamera 跑通：
 
@@ -254,7 +360,7 @@ curl -L -I "$WIKI_ROOT_LINK"
 - README 和 Wiki 必须同时包含固定 Wiki 根目录链接、四个子路径（run/model/image/video）、`run/` 可执行文件名、模型文件清单、关键证据图片/视频文件清单。
 
 
-### 11. 推送到 GitHub
+### 15. 推送到 GitHub
 
 用户确认 demo 和文档无误后，提交并推送到 GitHub：
 
@@ -276,6 +382,7 @@ mkdir -p solutions/sesg-project/<demo_name>/evidence
 # 复制 Wiki 文档
 cp ~/reCamera_demo/<demo_name>/<demo_name>_Demo_Wiki.md solutions/sesg-project/<demo_name>/wiki/
 cp ~/reCamera_demo/<demo_name>/DEPLOY_REPORT.md solutions/sesg-project/<demo_name>/wiki/
+cp ~/reCamera_demo/<demo_name>/eval/qa_report.md solutions/sesg-project/<demo_name>/wiki/
 
 # 复制证据截图（只复制关键帧，1-3 张）
 cp ~/reCamera_demo/<demo_name>/evidence/image/frame_0000.png solutions/sesg-project/<demo_name>/evidence/
@@ -298,7 +405,7 @@ git push origin main
 - 证据视频不提交到 GitHub，上传到 `agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/`
 - 提交前检查 `git status` 确认没有意外文件
 
-### 12. GitHub 干净克隆验证闭环
+### 16. GitHub 干净克隆验证闭环
 
 推送到 GitHub 后，**不要立即把 Wiki 当作最终完成**。必须在固定测试线/干净验证目录中拉取刚推送的 GitHub 版本，验证外部用户路径是否完整。
 
@@ -354,22 +461,22 @@ rclone copy agent:reCamera_Shared/Wiki/<demo_name>/model/ "$VERIFY_ROOT/model/" 
 - reCamera 部署路径和公开运行命令。
 - 验收证据文件名和保存位置。
 
-### 13. 最终写定 Wiki
+### 17. 最终写定 Wiki
 
-只有第 10 步验证闭环通过后，才可以把 Wiki 草稿写定为最终 Wiki：
+只有第 16 步验证闭环通过后，才可以把 Wiki 草稿写定为最终 Wiki：
 
 - 不要写”理论可运行”或”本机验证通过”；必须写清楚 GitHub 干净 clone 后的真实验证结果。
 - Wiki 中的构建命令、部署命令、运行命令必须与闭环验证中实际使用的公开命令一致。
 - Wiki 中的 Google Drive 路径必须能让用户拿到所有 GitHub 不提交但运行必需的模型和库。
-- 如果验证过程中发现 README/Wiki 命令不完整，必须先修 GitHub 代码或文档，重新推送并重跑第 10 步。
+- 如果验证过程中发现 README/Wiki 命令不完整，必须先修 GitHub 代码或文档，重新推送并重跑第 16 步。
 
-### 14. 更新成功记录
+### 18. 更新成功记录
 
-**只有完成上述全部 13 步，才能执行此步骤。**
+**只有完成上述 0-18 全部步骤，才能执行此步骤。**
 
 如果用户中途停止、某一步失败、用户未审核通过、或 GitHub 验证闭环未通过，则**不写入成功记录**。
 
-完成全部 13 步后，更新 `success-records.md`：
+完成全部 0-18 步后，更新 `success-records.md`：
 
 ```markdown
 ### <demo_name> (<date>)
@@ -389,6 +496,7 @@ rclone copy agent:reCamera_Shared/Wiki/<demo_name>/model/ "$VERIFY_ROOT/model/" 
 |------|------|------|
 | Wiki 文档 | `solutions/sesg-project/<demo>/wiki/<demo>_Demo_Wiki.md` | 公开文档 |
 | 部署报告 | `solutions/sesg-project/<demo>/wiki/DEPLOY_REPORT.md` | 内部报告 |
+| 质量报告 | `solutions/sesg-project/<demo>/wiki/qa_report.md` | baseline/reCamera 对齐评分摘要 |
 | 证据截图 | `solutions/sesg-project/<demo>/evidence/frame_*.png` | 关键帧（1-3 张） |
 | 源代码 | `solutions/sesg-project/<demo>/main/*.cpp` | C++ 代码 |
 | 构建配置 | `solutions/sesg-project/<demo>/CMakeLists.txt` | CMake 配置 |
@@ -411,6 +519,7 @@ rclone copy agent:reCamera_Shared/Wiki/<demo_name>/model/ "$VERIFY_ROOT/model/" 
 ## 输出
 
 - 设备上部署成功的项目
+- 质量基准报告 - `eval/qa_report.md` 并提交摘要到 GitHub
 - 少量关键证据截图 - 提交到 GitHub
 - 完整证据图片和证据视频 - 上传到 Google Drive 并在 README/Wiki 贴公开链接
 - Wiki 文档 - 提交到 GitHub
