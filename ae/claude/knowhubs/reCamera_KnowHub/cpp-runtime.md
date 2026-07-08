@@ -5,7 +5,7 @@
 在运行 C++ 摄像头 demo 前，需要停止占用摄像头的服务：
 
 ```bash
-/home/steven/.claude/skills/ae/environments/seeed-recamera/scripts/recamera_ssh.sh "printf 'recamera.1\n' | sudo -S /etc/init.d/S03node-red stop || true; printf 'recamera.1\n' | sudo -S /etc/init.d/S91sscma-node stop || true; printf 'recamera.1\n' | sudo -S /etc/init.d/S93sscma-supervisor stop || true"
+/home/steven/.claude/skills/ae/environments/seeed-recamera/scripts/recamera_ssh.sh "for p in 'recamera.1' 'kkk000++'; do printf '%s\n' \"\$p\" | sudo -S true 2>/dev/null && break; done; sudo /etc/init.d/S03node-red stop || true; sudo /etc/init.d/S91sscma-node stop || true; sudo /etc/init.d/S93sscma-supervisor stop || true"
 ```
 
 ## LD_LIBRARY_PATH 设置
@@ -21,7 +21,7 @@ LD_LIBRARY_PATH=/mnt/system/lib:/mnt/system/usr/lib:/mnt/system/usr/lib/3rd:$LD_
 在激进的进程清理后，通过重启恢复：
 
 ```bash
-/home/steven/.claude/skills/ae/environments/seeed-recamera/scripts/recamera_ssh.sh "printf 'recamera.1\n' | sudo -S reboot"
+/home/steven/.claude/skills/ae/environments/seeed-recamera/scripts/recamera_ssh.sh "for p in 'recamera.1' 'kkk000++'; do printf '%s\n' \"\$p\" | sudo -S true 2>/dev/null && break; done; sudo reboot"
 ```
 
 然后验证：

@@ -9,7 +9,7 @@
 ## reCamera 设备
 
 - SSH 用户名：`recamera`
-- SSH 密码：`recamera.1`
+- SSH 密码：可能是 `recamera.1` 或 `kkk000++`；优先使用封装脚本自动尝试，必要时用 `RECAMERA_PASSWORD` 显式指定。
 
 ## 安全注意事项
 

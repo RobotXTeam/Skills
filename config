@@ -2,8 +2,12 @@
 #   HostName 192.168.14.56
 #   User steven
 
+Host 192.168.2.166
+  HostName 192.168.2.166
+  User root
+
 Host recamera-pro
-  HostName 192.168.4.200 #192.168.2.113
+  HostName 192.168.4.200#192.168.2.113
   User root
 #密码 recamera.1
 
@@ -23,12 +27,12 @@ Host qiang
 #密码 1
 
 Host seeed
-  HostName 192.168.4.7 #100.76.45.91 192.168.2.113
+  HostName 192.168.2.113#192.168.4.7 #100.76.45.91、192.168.2.113、10.88.222.222
   User seeed
 #密码 0
 
 Host steven
-  HostName 100.108.64.20 #10.88.226.245
+  HostName 100.108.64.20#10.88.226.245
   User steven
 #密码 1
 
@@ -81,11 +85,11 @@ Host rv1126b
   ForwardX11Trusted yes
 #密码 1
 
-Host recamera pro
-  HostName 192.168.2.141
-  User root
-  ForwardX11 yes
-  ForwardX11Trusted yes
+# Host recamera pro
+#   HostName 192.168.2.141
+#   User root
+#   ForwardX11 yes
+#   ForwardX11Trusted yes
 #密码 1
 
 Host openwrt

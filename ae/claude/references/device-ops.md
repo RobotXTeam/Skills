@@ -11,7 +11,7 @@ Use the bundled wrapper:
 Equivalent raw command:
 
 ```bash
-sshpass -p 'recamera.1' ssh \
+sshpass -p '<recamera.1-or-kkk000++>' ssh \
   -o StrictHostKeyChecking=accept-new \
   -o PreferredAuthentications=password,keyboard-interactive \
   -o PubkeyAuthentication=no \
@@ -24,7 +24,7 @@ sshpass -p 'recamera.1' ssh \
 Use local `scp` with the same proxy:
 
 ```bash
-sshpass -p 'recamera.1' scp \
+sshpass -p '<recamera.1-or-kkk000++>' scp \
   -o StrictHostKeyChecking=accept-new \
   -o PreferredAuthentications=password,keyboard-interactive \
   -o PubkeyAuthentication=no \
@@ -42,7 +42,7 @@ sudo /etc/init.d/S91sscma-node stop 2>/dev/null || true
 sudo /etc/init.d/S93sscma-supervisor stop 2>/dev/null || true
 ```
 
-If `sudo` asks for a password, use `recamera.1`. Do not delete init scripts unless explicitly requested.
+If `sudo` asks for a password, use the active reCamera password: usually `recamera.1`, but it may be `kkk000++`. Do not delete init scripts unless explicitly requested.
 
 Restart after tests:
 

@@ -7,7 +7,7 @@
 - seeed Tailscale：`100.76.45.91`。
 - seeed OS：Ubuntu 22.04。
 - `seeed` -> reCamera：直接 USB/LAN `192.168.42.1`。
-- reCamera SSH：用户 `recamera`，密码 `recamera.1`。
+- reCamera SSH：用户 `recamera`，密码可能是 `recamera.1` 或 `kkk000++`；优先使用封装脚本自动尝试。
 - reCamera OS API：`http://192.168.42.1/api/version`，最后验证 `0.2.3`。
 - reCamera OS：Buildroot 2021.05，Linux 5.10.4 RISC-V。
 

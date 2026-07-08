@@ -16,7 +16,7 @@ Node-RED demos are not runnable recipes in this skill yet. C++ and system knowle
 - Web UI: `http://192.168.42.1`.
 - Key web routes: `/#/init`, `/#/workspace`, `/#/network`, `/#/security`, `/#/terminal`, `/#/system`, `/#/power`.
 - Original Node-RED UI: `http://192.168.42.1:1880`.
-- SSH user/password: `recamera` / `recamera.1`.
+- SSH user/password: `recamera` / `recamera.1` or `kkk000++`; prefer bundled wrappers, which try both unless `RECAMERA_PASSWORD` is set.
 - Steven's bridge host: `seeed` at Tailscale `100.76.45.91` and LAN `192.168.4.7`, password `0`.
 
 ## OS and Services
