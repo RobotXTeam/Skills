@@ -2,12 +2,17 @@
 #   HostName 192.168.14.56
 #   User steven
 
-Host 192.168.2.166
+Host radxa
+  HostName 192.168.2.192
+  User radxa
+#密码 0
+
+Host recamera-pro
   HostName 192.168.2.166
   User root
 
 Host recamera-pro
-  HostName 192.168.4.200#192.168.2.113
+  HostName 192.168.4.200#192.168.2.166
   User root
 #密码 recamera.1
 
