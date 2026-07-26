@@ -2,42 +2,33 @@
 #   HostName 192.168.14.56
 #   User steven
 
+Host aliyun-cloud
+  HostName 10.88.21.78
+  User root
+#密码 ,/Q+AhPq_pDk6u.
+
 Host radxa
-  HostName 192.168.2.192
+  HostName 192.168.2.192 #10.88.78.146
   User radxa
 #密码 0
 
 Host recamera-pro
-  HostName 192.168.2.166
-  User root
-
-Host recamera-pro
-  HostName 192.168.4.200#192.168.2.166
+  HostName 192.168.2.166 #192.168.4.200
   User root
 #密码 recamera.1
 
-Host openwrt
-  HostName 100.90.115.46
-  User root
-#密码 pi
-
-Host orangepi
-  HostName 100.122.52.107
-  User orangepi
-#密码 1
-
 Host qiang
-  HostName 100.78.97.65
+  HostName 10.88.235.251 #100.78.97.65
   User steven
 #密码 1
 
 Host seeed
-  HostName 192.168.2.113#192.168.4.7 #100.76.45.91、192.168.2.113、10.88.222.222
+  HostName 192.168.2.113#10.88.222.222、192.168.4.7、100.76.45.91
   User seeed
 #密码 0
 
 Host steven
-  HostName 100.108.64.20#10.88.226.245
+  HostName 10.88.226.245 #100.108.64.20
   User steven
 #密码 1
 
@@ -45,20 +36,6 @@ Host recamera
   HostName 192.168.42.1
   User recamera
 
-Host recamera-11
-  HostName 192.168.2.11
-  User recamera
-#密码 kkk000++
-
-Host recamera-10
-  HostName 192.168.2.10
-  User recamera
-#密码 kkk000++
-
-Host recamera-nom
-  HostName 192.168.2.15
-  User recamera
-#密码 kkk000++
 
 Host jetson
   HostName 192.168.2.30
@@ -67,22 +44,6 @@ Host jetson
   ForwardX11Trusted yes
 #密码 1
 
-Host recamera-200
-  HostName 192.168.2.200
-  User recamera
-#密码 kkk000++
-
-Host recamera-201
-  HostName 192.168.2.201
-  User recamera
-#密码 kkk000++
-
-
-Host recamera-12
-  HostName 192.168.2.12
-  User recamera
-#密码 kkk000++
-
 Host rv1126b
   HostName 192.168.2.51
   User root
@@ -90,22 +51,15 @@ Host rv1126b
   ForwardX11Trusted yes
 #密码 1
 
-# Host recamera pro
-#   HostName 192.168.2.141
-#   User root
-#   ForwardX11 yes
-#   ForwardX11Trusted yes
-#密码 1
-
 Host openwrt
-  HostName 192.168.2.1
+  HostName 192.168.2.1 #10.88.92.200、100.90.115.46
   User root
   ForwardX11 yes
   ForwardX11Trusted yes
 #密码 pi
 
 Host rk3588
-  HostName 192.168.5.50
+  HostName 192.168.5.50 #100.122.52.107、10.88.14.46
   User orangepi
   ForwardX11 yes
   ForwardX11Trusted yes
