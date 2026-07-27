@@ -29,6 +29,7 @@ AE Agent 是一个自动化工程代理，用于根据知识库部署项目到 r
   - `cpp-runtime.md` - C++ 运行时基线
   - `model-conversion.md` - 模型转换方法论
   - `receiver-recording.md` - 接收端录制方法
+  - `live-osd-display.md` - 本机实时 OSD 显示（UDP 直推，用户审核一等能力）
 
 ## Environments
 
@@ -38,7 +39,7 @@ AE Agent 是一个自动化工程代理，用于根据知识库部署项目到 r
   - `network.md` - 网络配置
   - `credentials.md` - 凭据信息
   - `toolchain.md` - 工具链配置
-  - `scripts/` - 辅助脚本
+  - `scripts/` - 辅助脚本（含实时 OSD 三件套：`udp_sender.py` 设备侧推流、`udp_viewer.py` 本机弹窗、`udp_relay.py` seeed 中继 fallback；详见 `knowhubs/reCamera_KnowHub/live-osd-display.md`）
 
 ## Templates
 

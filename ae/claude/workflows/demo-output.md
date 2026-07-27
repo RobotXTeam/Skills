@@ -308,6 +308,24 @@ GitHub 代码完整性要求：
 - 录制视频流和图片必须要有足够的证据，比如实时 OSD 检测框或者 OSD 数据在画面上，或者导出来在 seeed 主机上叠加。用户看到视频后应能直接理解这个 demo 的视觉效果。
 - 最终证据视频应优先使用第 8 步质量门已通过的模型、阈值、NMS 和后处理参数。
 
+#### 11.0 本机实时 OSD 显示（先于录制）
+
+录制最终证据前，先在本机弹一个**实时 OSD 窗口**让用户看实时画面，确认检测框/掩码/告警横幅正确、阈值合适，再录。这是用户审核的一等能力（实时看 + 留证据）。
+
+复用 `knowhubs/reCamera_KnowHub/live-osd-display.md` 的能力三件套（`environments/seeed-recamera/scripts/` 下 `udp_sender.py` / `udp_viewer.py` / `udp_relay.py`）。前提：demo 在设备上持续往一个目录写 `frame_NNNN.jpg`（带 OSD 的标注帧）。
+
+```bash
+# 1) 本机起 viewer（绑 :9200，弹窗），DISPLAY 按本机桌面设置
+DISPLAY=:0 python3 udp_viewer.py 9200 "reCamera <demo> live OSD"
+
+# 2) 设备侧起 sender 直推本机（root，能读 root 写的帧）
+#    先判同子网: 设备上 `ip route get <本机IP>` 无 via 即同子网走直推
+sudo python3 udp_sender.py /home/recamera/<demo>/live <本机IP> 9200
+#    不同子网(只能经 seeed USB): seeed 起 udp_relay.py <seeed_usb_ip>:9100 -> 本机:9200，sender 指向 seeed_usb_ip:9100
+```
+
+验收：sender 日志 `sent N frames, X fps` ≈ 摄像头产帧率；本机日志 `pkts=.. complete=..` 中 complete≈sent 即零丢包；窗口里实时帧带正确 OSD。注意：别用 `kill -9` 停摄像头（会泄漏 VPSS 导致下次起不来，见 live-osd-display.md 坑列表）。
+
 ### 12. 多模态检验
 
 使用多模态功能读取输出的视频、图片、baseline 对比结果和评分报告，确认内容是否对得上客户想要的效果。如果发现视频展示效果与第 8 步评分结论矛盾，必须回到第 9 步修复，不能继续发布。
@@ -318,6 +336,8 @@ GitHub 代码完整性要求：
 - 内容是否正确
 - 效果是否通过
 - 是否需要调整
+
+用户审核包含两条腿：第 11.0 步的**本机实时 OSD 显示**（看实时、调阈值/颜色规则）+ 本步的**录制证据回看**（确认最终视频/截图）。两者都通过才算审核完成。
 
 ### 14. 生成 Wiki 草稿文档
 
