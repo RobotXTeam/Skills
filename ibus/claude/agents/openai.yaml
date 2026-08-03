@@ -1,0 +1,4 @@
+interface:
+  display_name: "IBus 中文显示修复"
+  short_description: "修复 Ubuntu 中文、IBus 候选框和系统通知显示"
+  default_prompt: "使用 $ibus 诊断并在不注销系统的情况下修复中文和拼音候选框显示。"

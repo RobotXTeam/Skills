@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+set -u
+
+APP_NAME="输入法拼音显示修复"
+STATE_DIR="$HOME/.local/state/ibus-pinyin-display-fix"
+mkdir -p "$STATE_DIR"
+
+timestamp="$(date +%Y%m%d-%H%M%S)"
+backup="$STATE_DIR/settings-$timestamp.txt"
+log="$STATE_DIR/run-$timestamp.log"
+
+has_cmd() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+info() {
+  if has_cmd zenity; then
+    zenity --info --title="$APP_NAME" --width=460 --text="$1" 2>/dev/null || true
+  else
+    printf '%s\n' "$1"
+  fi
+}
+
+error_box() {
+  if has_cmd zenity; then
+    zenity --error --title="$APP_NAME" --width=520 --text="$1" 2>/dev/null || true
+  else
+    printf 'ERROR: %s\n' "$1" >&2
+  fi
+}
+
+confirm() {
+  if has_cmd zenity; then
+    zenity --question \
+      --title="$APP_NAME" \
+      --width=520 \
+      --ok-label="一键修复" \
+      --cancel-label="取消" \
+      --text="将执行以下操作：\n\n- 备份当前输入法与显示设置\n- 修正中文字体和 IBus 候选面板\n- 切回 libpinyin 并热重启 IBus\n\n不会改动显示器缩放与横竖屏，也不重启桌面，已打开的窗口和进程不受影响。"
+  else
+    return 0
+  fi
+}
+
+run_fix() {
+  {
+    echo "[$(date '+%F %T')] start"
+    echo "backup=$backup"
+    echo "log=$log"
+    echo "session_type=${XDG_SESSION_TYPE:-unknown}"
+    echo "desktop_session=${DESKTOP_SESSION:-unknown}"
+    echo
+
+    {
+      echo "# created: $(date '+%F %T')"
+      echo "# session"
+      echo "XDG_SESSION_TYPE=${XDG_SESSION_TYPE:-}"
+      echo "DESKTOP_SESSION=${DESKTOP_SESSION:-}"
+      echo "XDG_CURRENT_DESKTOP=${XDG_CURRENT_DESKTOP:-}"
+      echo
+      echo "# GNOME display settings"
+      gsettings get org.gnome.mutter experimental-features 2>/dev/null || true
+      gsettings get org.gnome.desktop.interface text-scaling-factor 2>/dev/null || true
+      gsettings get org.gnome.desktop.interface scaling-factor 2>/dev/null || true
+      echo
+      echo "# input sources"
+      gsettings get org.gnome.desktop.input-sources sources 2>/dev/null || true
+      echo
+      echo "# IBus settings"
+      dconf dump /desktop/ibus/ 2>/dev/null || true
+      echo
+      echo "# ibus-libpinyin settings"
+      dconf dump /com/github/libpinyin/ibus-libpinyin/ 2>/dev/null || true
+      echo
+      echo "# GNOME interface font settings"
+      dconf dump /org/gnome/desktop/interface/ 2>/dev/null || true
+    } >"$backup"
+
+    echo "apply stable Chinese font settings"
+    gsettings set org.gnome.desktop.interface font-name 'Noto Sans CJK SC 11'
+    gsettings set org.gnome.desktop.interface document-font-name 'Noto Sans CJK SC 11'
+    gsettings set org.gnome.desktop.interface monospace-font-name 'Noto Sans Mono CJK SC 13'
+    gsettings set org.freedesktop.ibus.panel use-custom-font true
+    gsettings set org.freedesktop.ibus.panel custom-font 'Noto Sans CJK SC 12'
+    gsettings set org.freedesktop.ibus.panel use-glyph-from-engine-lang true
+
+    echo "apply input method settings"
+    gsettings set org.freedesktop.ibus.general embed-preedit-text false
+    gsettings set org.freedesktop.ibus.general preload-engines "['libpinyin']"
+    gsettings set org.gnome.desktop.input-sources sources "[('ibus', 'libpinyin'), ('xkb', 'cn')]"
+    echo "rebuild font cache"
+    fc-cache -r >/dev/null 2>&1 || true
+
+    echo "restart ibus"
+    ibus restart >/tmp/ibus-pinyin-display-fix-restart.out 2>/tmp/ibus-pinyin-display-fix-restart.err || {
+      ibus exit >/tmp/ibus-pinyin-display-fix-exit.out 2>/tmp/ibus-pinyin-display-fix-exit.err || true
+      sleep 1
+      nohup ibus-daemon -drx >/tmp/ibus-pinyin-display-fix-daemon.out 2>/tmp/ibus-pinyin-display-fix-daemon.err &
+    }
+    sleep 2
+    ibus engine libpinyin >/tmp/ibus-pinyin-display-fix-engine.out 2>/tmp/ibus-pinyin-display-fix-engine.err || true
+
+    # 不重启 gnome-shell：--replace 会把整个桌面会话及全部已打开进程一并重启/结束，
+    # 与修复 IBus 拼音显示无关，仅重启 ibus-daemon 即可。
+
+    echo
+    echo "result"
+    echo "experimental=$(gsettings get org.gnome.mutter experimental-features 2>/dev/null || true)"
+    echo "text_scaling=$(gsettings get org.gnome.desktop.interface text-scaling-factor 2>/dev/null || true)"
+    echo "ui_font=$(gsettings get org.gnome.desktop.interface font-name 2>/dev/null || true)"
+    echo "candidate_font=$(gsettings get org.freedesktop.ibus.panel custom-font 2>/dev/null || true)"
+    echo "use_candidate_font=$(gsettings get org.freedesktop.ibus.panel use-custom-font 2>/dev/null || true)"
+    echo "sources=$(gsettings get org.gnome.desktop.input-sources sources 2>/dev/null || true)"
+    echo "embed=$(gsettings get org.freedesktop.ibus.general embed-preedit-text 2>/dev/null || true)"
+    echo "display=$(gsettings get com.github.libpinyin.ibus-libpinyin.libpinyin display-style 2>/dev/null || true)"
+    echo "engine=$(ibus engine 2>/dev/null || true)"
+    echo "[$(date '+%F %T')] done"
+  } >"$log" 2>&1
+}
+
+if ! confirm; then
+  exit 0
+fi
+
+if has_cmd zenity; then
+  (
+    echo "10"
+    echo "# 正在备份并修复输入法显示..."
+    run_fix
+    echo "100"
+    echo "# 完成"
+  ) | zenity --progress \
+      --title="$APP_NAME" \
+      --width=460 \
+      --text="正在修复..." \
+      --percentage=0 \
+      --auto-close \
+      --no-cancel 2>/dev/null || true
+else
+  run_fix
+fi
+
+if ibus engine 2>/dev/null | grep -qx 'libpinyin'; then
+  if has_cmd notify-send; then
+    notify-send "$APP_NAME" "修复完成。请在新输入框里测试拼音显示。"
+  fi
+  info "修复完成。\n\n请在新打开的输入框里测试拼音显示。\n\n备份：$backup\n日志：$log"
+else
+  error_box "修复命令已执行，但当前 IBus 引擎不是 libpinyin。\n\n请查看日志：$log"
+  exit 1
+fi

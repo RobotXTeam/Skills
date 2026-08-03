@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+log_dir="${XDG_CACHE_HOME:-$HOME/.cache}"
+log_file="$log_dir/stable-ui-font-guard.log"
+mkdir -p "$log_dir"
+
+{
+  printf '[%s] checking UI font settings\n' "$(date '+%F %T')"
+
+  desired_font='Noto Sans CJK SC 11'
+  desired_mono='Noto Sans Mono CJK SC 13'
+
+  current_font="$(gsettings get org.gnome.desktop.interface font-name 2>/dev/null || true)"
+  current_doc="$(gsettings get org.gnome.desktop.interface document-font-name 2>/dev/null || true)"
+  current_mono="$(gsettings get org.gnome.desktop.interface monospace-font-name 2>/dev/null || true)"
+
+  if [ "$current_font" != "'$desired_font'" ]; then
+    gsettings set org.gnome.desktop.interface font-name "$desired_font"
+    printf 'restored font-name to %s\n' "$desired_font"
+  fi
+
+  if [ "$current_doc" != "'$desired_font'" ]; then
+    gsettings set org.gnome.desktop.interface document-font-name "$desired_font"
+    printf 'restored document-font-name to %s\n' "$desired_font"
+  fi
+
+  if [ "$current_mono" != "'$desired_mono'" ]; then
+    gsettings set org.gnome.desktop.interface monospace-font-name "$desired_mono"
+    printf 'restored monospace-font-name to %s\n' "$desired_mono"
+  fi
+
+  printf 'font settings are consistent\n'
+} >>"$log_file" 2>&1

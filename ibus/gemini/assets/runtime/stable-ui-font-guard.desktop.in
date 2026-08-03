@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Stable UI Font Guard
+Comment=Keep GNOME Shell and IBus candidate popup fonts on a stable fallback chain.
+Exec=@FONT_GUARD@
+Terminal=false
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=10
