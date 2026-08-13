@@ -5,21 +5,21 @@
 For reCamera C++ demos, the single canonical working repository — local repo, build location, and source of truth — is:
 
 ```text
-seeed:/home/seeed/sscma-example-sg200x
+seeed:/home/seeed/work/sscma-example-sg200x
 ```
 
 Default behavior for all AE demo work:
 
 - SSH into `seeed`.
 - Create, edit, move, delete, build, and package demo code on `seeed`.
-- Everything (the local repository AND every build) lives under `/home/seeed/sscma-example-sg200x`. There is no separate local-PC copy of the repo to keep in sync.
+- Everything (the local repository AND every build) lives under `/home/seeed/work/sscma-example-sg200x`. There is no separate local-PC copy of the repo to keep in sync.
 
 ## New Demo Placement
 
 Create all new reCamera demos under:
 
 ```text
-/home/seeed/sscma-example-sg200x/solutions/sesg-project/<demo_name>
+/home/seeed/work/sscma-example-sg200x/solutions/sesg-project/<demo_name>
 ```
 
 Avoid `solutions/cosg-project` for new demos unless Steven specifically requests it.
@@ -61,19 +61,29 @@ Required sequence after `git push origin main`:
 If this loop fails at any step, return to:
 
 ```text
-seeed:/home/seeed/sscma-example-sg200x
+seeed:/home/seeed/work/sscma-example-sg200x
 ```
 
 Fix the source, scripts, README/Wiki, or Google Drive asset publication, then commit, push, and repeat the clean verification loop. Do not finalize or publish the Wiki until the loop passes.
 
 The GitHub repository must contain complete buildable source code. Large models, complete evidence sets, evidence videos, and large runtime libraries can live in Google Drive, but every such external asset must be listed in README/Wiki with exact filenames and fixed child paths.
 
+## run/ Ready-to-Run Package (Core Requirement)
+
+Google Drive is where users fetch everything needed to run a demo. **Every demo must have a `run/` folder so that a user who fetches `run/` + `model/` can run the demo directly on reCamera — no compilation, no files outside Google Drive.** `run/` contents:
+
+- **reCamera executable** (cross-compiled RISC-V ELF, e.g. `onvif_yolo`, `gb28181_client`, `ppocr-reader`). Normally one executable is enough.
+- **`README.md`**: a concise ready-to-run guide — which files to download (including the models in `../model/`), where to place them on the device, which services to stop, the full run command (threshold uses the best-tested value; prefer starting tuning from a relatively low confidence), and how to verify. Written for users who "fetch it and run it after a quick read".
+- **Runtime dependencies**: only when system libraries are insufficient. For example GB28181 needs SIP libraries `lib/libeXosip2.so.* libosip2.so.* libosipparser2.so.*` plus one-click scripts such as `run_rtmp.sh` / `run_on_device.sh`. Normal demos can rely on the device's own `/mnt/system/lib` and need nothing extra.
+- The executable does not have to be stripped, but it must be the device architecture (`file` must show `RISC-V ... ld-musl-riscv64*`).
+- Models stay in `model/`; do not duplicate them into `run/`. The README tells the user to place both in the same device directory.
+
 ## Sync Note
 
 The `seeed` repository at:
 
 ```text
-seeed:/home/seeed/sscma-example-sg200x
+seeed:/home/seeed/work/sscma-example-sg200x
 ```
 
 is the source of truth for all demo source edits, builds, and commits. Do not maintain a parallel local-PC copy.

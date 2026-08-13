@@ -2,12 +2,32 @@
 
 ## 设备访问
 
-- USB/直接 IP：`192.168.42.1`。
 - Web UI：`http://192.168.42.1`。
 - 关键 web 路由：`/#/init`、`/#/workspace`、`/#/network`、`/#/security`、`/#/terminal`、`/#/system`、`/#/power`。
 - 原始 Node-RED UI：`http://192.168.42.1:1880`。
-- SSH 用户/密码：`recamera` / `recamera.1` 或 `kkk000++`；优先使用封装脚本自动尝试，必要时用 `RECAMERA_PASSWORD` 显式指定。
-- Steven 的桥接主机：`seeed`，Tailscale `192.168.2.113`，LAN `192.168.4.7`，more`10.88.222.222`密码 `0`。
+- 网络拓扑和各入口 IP（reCamera USB/LAN、seeed 各网段）：见 `environments/seeed-recamera/network.md`。
+- SSH 用户/密码：见 `environments/seeed-recamera/credentials.md`；优先使用封装脚本自动尝试，必要时用 `RECAMERA_PASSWORD` 显式指定。
+
+## SSH 与文件传输
+
+通过 `seeed` 跳板访问 reCamera，统一使用封装脚本（自动依次尝试 reCamera 密码，密码见 `environments/seeed-recamera/credentials.md`，可用 `RECAMERA_PASSWORD` 显式指定）：
+
+```bash
+environments/seeed-recamera/scripts/recamera_ssh.sh 'hostname; whoami'
+environments/seeed-recamera/scripts/recamera_scp_to.sh <local-file> /home/recamera/<demo>/
+```
+
+SSH/SCP 的 ProxyCommand、超时参数等细节以脚本实现为准，不要另行硬编码 raw 命令。
+
+## 隧道与截图（Web UI）
+
+对 reCamera Web UI 截图时，通过 `seeed` 做 SSH 本地转发：
+
+```bash
+ssh -N -L 18080:192.168.42.1:80 seeed   # seeed 密码见 environments/seeed-recamera/credentials.md
+```
+
+然后在本机用 Playwright 或浏览器打开 `http://127.0.0.1:18080`，截图保存到 `/tmp/recamera-*`。
 
 ## OS 和服务
 
@@ -21,7 +41,7 @@ reCamera OS 基于 Buildroot，使用 `/etc/init.d` 下的 SysVinit 脚本。
 - `S98ttyd`：web 终端。
 - `S50sshd`：SSH。
 
-C++ 摄像头 demo 通常需要停止 `S03node-red`、`S91sscma-node` 和 `S93sscma-supervisor`，以便摄像头不被占用。
+C++ 摄像头 demo 运行前需要停止占用摄像头的服务，服务清单和停/恢复命令见 `knowhubs/reCamera_KnowHub/cpp-runtime.md`。
 
 ## 模型知识
 

@@ -26,6 +26,9 @@ UDP 适合本场景的理由：链路可靠（LAN/USB，丢包≈0）、丢一�
    - 显示 "via <gateway>"                                      => 路由路径, 多半有 PMTU 黑洞, 走【中继】
 2. 【直推】(最优, 一跳): 设备 udp_sender -> 本机:9200 ; 本机 udp_viewer :9200
 3.【中继】(fallback): 设备 udp_sender -> seeed USB IP:9100 ; seeed udp_relay 9100->本机:9200 ; 本机 udp_viewer :9200
+4.【SSH 隧道桥】(PC 与 seeed 之间只有单向 NAT/ssh 可达时): 设备 sender -> seeed USB:9100;
+   seeed udp2tcp(UDP:9100 -> 长度前缀帧写 TCP 127.0.0.1:9101); 本机 `ssh -L 9101:127.0.0.1:9101 seeed`;
+   本机 tcp2udp(读隧道帧 -> sendto 127.0.0.1:9200); viewer 不变。 Linkbit 等单向打通环境见见 2026-08 实例。
 ```
 
 reCamera 常见情况：USB 连 seeed（192.168.42.x，只能经 seeed 中继）；同时很多 reCamera 还有 wifi/LAN 口在你本机同子网（如 192.168.2.x）——优先用同子网直推。
@@ -83,7 +86,7 @@ magic u16=0xB0C0 | frame_id u16 | frag_idx u16 | frag_count u16 | frag_len u16 |
 
 ## 在 demo-output 工作流里的位置
 
-`workflows/demo-output.md` 的用户审核（步骤 11/13）应包含：
+`workflows/demo-output.md` 的用户审核（步骤 12）应包含：
 - **本机实时 OSD 显示**（本能力）：录最终证据前，先在本机看实时画面，确认 OSD 框/掩码/告警横幅正确、阈值合适。
 - **录制证据**：确认实时效果 OK 后再录视频/截图。
 

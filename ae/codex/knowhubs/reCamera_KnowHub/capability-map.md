@@ -7,7 +7,7 @@
 ### 本机环境
 
 - 工作目录：`~/work/reCamera_demo/<demo_name>/`
-- 仓库目录：`/home/seeed/sscma-example-sg200x/solutions/sesg-project/<demo_name>/`
+- 仓库目录：`/home/seeed/work/sscma-example-sg200x/solutions/sesg-project/<demo_name>/`
 - Claude skills：`~/.claude/skills/ae/`
 
 现有 demo：
@@ -17,7 +17,7 @@
 ### seeed 设备环境
 
 - 工作目录：`~/reCamera_demo/<demo_name>/`
-- 仓库目录：`/home/seeed/sscma-example-sg200x/solutions/sesg-project/<demo_name>/`
+- 仓库目录：`/home/seeed/work/sscma-example-sg200x/solutions/sesg-project/<demo_name>/`
 - 远程：`https://github.com/RobotXTeam/sscma-example-sg200x.git`
 - 认证：GitHub CLI（用户 congchin38-coder）
 - 代理：需要配置 `http://127.0.0.1:7890`（Clash）
@@ -33,12 +33,13 @@ rsync -avz --exclude='.git' --exclude='*.cvimodel' --exclude='*.onnx' \
 
 # 2. seeed 上复制到仓库并推送
 ssh seeed "
-  cd /home/seeed/sscma-example-sg200x
+  cd /home/seeed/work/sscma-example-sg200x
   mkdir -p solutions/sesg-project/<demo_name>/wiki
   mkdir -p solutions/sesg-project/<demo_name>/evidence
   cp ~/reCamera_demo/<demo_name>/<demo_name>_Demo_Wiki.md solutions/sesg-project/<demo_name>/wiki/
   cp ~/reCamera_demo/<demo_name>/DEPLOY_REPORT.md solutions/sesg-project/<demo_name>/wiki/
-  cp ~/reCamera_demo/<demo_name>/evidence/frame_*.png solutions/sesg-project/<demo_name>/evidence/
+  cp ~/reCamera_demo/<demo_name>/eval/qa_report.md solutions/sesg-project/<demo_name>/wiki/
+  cp ~/reCamera_demo/<demo_name>/evidence/image/frame_*.png solutions/sesg-project/<demo_name>/evidence/   # 只挑关键帧 1-3 张
   git add solutions/sesg-project/<demo_name>/
   git commit -m 'Add <demo_name> demo with wiki and evidence'
   git push origin main
@@ -90,12 +91,12 @@ ssh seeed "
 `UDP_Face_Analysis`
 - 能力：C++ 人脸检测加年龄/性别/种族/情绪和 UDP 接收器。
 - 已知结果：修复后通过，评分 6/10。
-- 资产：`/home/seeed/sscma-example-sg200x/solutions/sesg-project/face_udp`。
+- 资产：`/home/seeed/work/sscma-example-sg200x/solutions/sesg-project/face_udp`。
 - 官方接收器：`udp_receiver.py`。
 - 工作命令模板：
 
 ```bash
-SEEED_USB_IP="$(/home/steven/.claude/skills/ae/environments/seeed-recamera/scripts/seeed_usb_ip.sh)"
+SEEED_USB_IP="$(environments/seeed-recamera/scripts/seeed_usb_ip.sh)"
 sudo env LD_LIBRARY_PATH=/mnt/system/lib:/mnt/system/usr/lib:/mnt/system/usr/lib/3rd:$LD_LIBRARY_PATH \
   ./face_udp yolo-face_mixfp16.cvimodel age_gender_race_bf16.cvimodel emotion_bf16.cvimodel \
   single 0.7 1 "$SEEED_USB_IP" 5001 20
@@ -125,7 +126,7 @@ sudo env LD_LIBRARY_PATH=/mnt/system/lib:/mnt/system/usr/lib:/mnt/system/usr/lib
 - 工作命令模板：
 
 ```bash
-SEEED_USB_IP="$(/home/steven/.claude/skills/ae/environments/seeed-recamera/scripts/seeed_usb_ip.sh)"
+SEEED_USB_IP="$(environments/seeed-recamera/scripts/seeed_usb_ip.sh)"
 sudo env LD_LIBRARY_PATH=/mnt/system/lib:/mnt/system/usr/lib:/mnt/system/usr/lib/3rd:$LD_LIBRARY_PATH \
   ./recamera_benchmark ./yolo11n_detection_cv181x_int8.cvimodel "$SEEED_USB_IP"
 ```
@@ -203,7 +204,7 @@ sudo env LD_LIBRARY_PATH=/mnt/system/lib:/mnt/system/usr/lib:/mnt/system/usr/lib
 
 `reCamera_demo_project_layout`
 - 能力：Steven 当前 reCamera C++ demo 目录规范和项目归档规则。
-- 默认仓库：`seeed:/home/seeed/sscma-example-sg200x`。
+- 默认仓库：`seeed:/home/seeed/work/sscma-example-sg200x`。
 - 新 demo 默认目录：`solutions/sesg-project/<demo_name>`。
 - 参考：`project-layout.md`。
 

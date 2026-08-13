@@ -23,8 +23,13 @@ Host qiang
 #密码 1
 
 Host seeed
-  HostName 192.168.2.113#10.88.222.222、192.168.4.7、100.76.45.91
+  HostName 192.168.2.113 #备选: 10.88.222.222、192.168.4.7、100.76.45.91、192.168.4.35
   User seeed
+#密码 0
+
+Host seeed0
+  HostName 192.168.2.194 #备选: 
+  User seeed0
 #密码 0
 
 Host steven

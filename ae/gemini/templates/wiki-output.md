@@ -277,6 +277,7 @@ python3 receiver.py
 ```bash
 sudo /etc/init.d/S03node-red start
 sudo /etc/init.d/S91sscma-node start
+sudo /etc/init.d/S93sscma-supervisor start
 curl -sS http://127.0.0.1/api/version
 ```
 

@@ -10,3 +10,8 @@ sshpass -p 0 ssh seeed 'ffmpeg -y -f x11grab -draw_mouse 0 -video_size 640x700 -
 ```
 
 使用 `xwininfo` 获取的实际窗口大小/位置。对于测试过的 OpenCV Qt 窗口，`640x700+0+0` 是正确的。
+
+## 使用原则
+
+- 做 wiki QA 证据时，优先使用官方 wiki/仓库自带的接收端脚本，不要用自绘渲染器替代。
+- 用户要求视觉证明时，提供 MP4 路径和一张代表帧。

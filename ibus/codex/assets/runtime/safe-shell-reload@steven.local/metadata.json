@@ -1,0 +1,6 @@
+{
+  "uuid": "safe-shell-reload@steven.local",
+  "name": "Safe Shell Reload",
+  "description": "Provides a private D-Bus method for safely reloading GNOME Shell on Xorg.",
+  "shell-version": ["42"]
+}

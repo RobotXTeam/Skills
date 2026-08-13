@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=输入法拼音显示修复
-Comment=修复 IBus 拼音候选框和系统中文显示空白的问题
+Comment=完整修复 IBus 拼音候选框和系统中文空白、乱码问题
 Exec=@FIX_SCRIPT@
 Icon=preferences-desktop-keyboard
 Terminal=false

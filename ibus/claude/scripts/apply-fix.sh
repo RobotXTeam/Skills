@@ -70,7 +70,15 @@ gsettings set org.freedesktop.ibus.panel use-glyph-from-engine-lang true
 fc-cache -r >/dev/null
 
 if $ibus_skill_restart; then
-  ibus restart
+  # 不在这里使用 `ibus restart`：它会杀掉 GNOME 会话托管的 ibus-daemon，
+  # 并拉起一个参数不匹配（-drx 而非 --panel disable --xim）、不受会话服务管理的
+  # 孤儿 daemon，导致候选窗口与 GNOME 集成脱节、修复结果反复异常。
+  # 只重启 GNOME 托管的 IBus 会话服务，不动桌面，也不注销系统。
+  if systemctl --user is-active org.freedesktop.IBus.session.GNOME.service >/dev/null 2>&1; then
+    systemctl --user restart org.freedesktop.IBus.session.GNOME.service >/dev/null 2>&1 || true
+  else
+    systemctl --user --no-block start org.freedesktop.IBus.session.GNOME.service >/dev/null 2>&1 || true
+  fi
   sleep 2
   ibus_skill_resolve_address
   if [ -n "$ibus_skill_engine_before" ]; then

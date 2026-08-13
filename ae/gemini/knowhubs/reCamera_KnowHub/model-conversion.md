@@ -17,7 +17,7 @@
 
 ## Conversion Scripts
 
-预置脚本位于 skill 的 `scripts/` 目录：
+以下脚本清单是历次转换使用的封装脚本（当前未收录进 skill；如需复用请按下方"Host Conversion Baseline"的手工流程重建）：
 
 ```bash
 # 通用转换
@@ -240,7 +240,7 @@ OpenCV 已经可以在 `sscma-example-sg200x` 中使用；只链接需要的部�
 ```bash
 export SG200X_SDK_PATH=/home/seeed/桌面/sg2002_recamera_emmc
 export PATH=/home/seeed/桌面/host-tools/gcc/riscv64-linux-musl-x86_64/bin:$PATH
-cd /home/seeed/sscma-example-sg200x/solutions/<demo_name>
+cd /home/seeed/work/sscma-example-sg200x/solutions/sesg-project/<demo_name>
 cmake -B build -DCMAKE_BUILD_TYPE=Release .
 cmake --build build -j$(nproc)
 ```

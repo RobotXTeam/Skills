@@ -36,7 +36,7 @@ confirm() {
       --width=520 \
       --ok-label="一键修复" \
       --cancel-label="取消" \
-      --text="将执行以下操作：\n\n- 备份当前输入法与显示设置\n- 修正中文字体和 IBus 候选面板\n- 切回 libpinyin 并热重启 IBus\n\n不会改动显示器缩放与横竖屏，也不重启桌面，已打开的窗口和进程不受影响。"
+      --text="将执行以下操作：\n\n- 备份当前输入法与显示设置\n- 修正中文字体和 IBus 候选面板\n- 切回 libpinyin 并通过 GNOME 会话服务重载 IBus\n\n不会改动显示器缩放与横竖屏，也不重启桌面，已打开的窗口和进程不受影响。"
   else
     return 0
   fi
@@ -91,17 +91,21 @@ run_fix() {
     echo "rebuild font cache"
     fc-cache -r >/dev/null 2>&1 || true
 
-    echo "restart ibus"
-    ibus restart >/tmp/ibus-pinyin-display-fix-restart.out 2>/tmp/ibus-pinyin-display-fix-restart.err || {
-      ibus exit >/tmp/ibus-pinyin-display-fix-exit.out 2>/tmp/ibus-pinyin-display-fix-exit.err || true
-      sleep 1
-      nohup ibus-daemon -drx >/tmp/ibus-pinyin-display-fix-daemon.out 2>/tmp/ibus-pinyin-display-fix-daemon.err &
-    }
+    echo "restart ibus via GNOME session service"
+    # 不在这里使用 `ibus restart`：它会杀掉 GNOME 会话托管的 ibus-daemon，
+    # 并拉起一个参数不匹配（-drx 而非 --panel disable --xim）、不受会话服务管理的
+    # 孤儿 daemon，导致候选窗口与 GNOME 集成脱节、修复结果反复异常。
+    # 只重启 GNOME 托管的会话服务，不动桌面，也不注销系统。
+    if systemctl --user is-active org.freedesktop.IBus.session.GNOME.service >/dev/null 2>&1; then
+      systemctl --user restart org.freedesktop.IBus.session.GNOME.service >/tmp/ibus-pinyin-display-fix-restart.out 2>/tmp/ibus-pinyin-display-fix-restart.err || true
+    else
+      systemctl --user --no-block start org.freedesktop.IBus.session.GNOME.service >/tmp/ibus-pinyin-display-fix-restart.out 2>/tmp/ibus-pinyin-display-fix-restart.err || true
+    fi
     sleep 2
     ibus engine libpinyin >/tmp/ibus-pinyin-display-fix-engine.out 2>/tmp/ibus-pinyin-display-fix-engine.err || true
 
     # 不重启 gnome-shell：--replace 会把整个桌面会话及全部已打开进程一并重启/结束，
-    # 与修复 IBus 拼音显示无关，仅重启 ibus-daemon 即可。
+    # 与修复 IBus 拼音显示无关，仅重启 IBus 会话服务即可。
 
     echo
     echo "result"

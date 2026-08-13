@@ -14,7 +14,8 @@ Connect to Steven's devices via SSH. Use the host table below to find the correc
 | openwrt | 100.90.115.46 | root | pi | no | Tailscale |
 | orangepi | 100.122.52.107 | orangepi | 1 | no | Tailscale |
 | qiang | 100.78.97.65 | steven | 1 | no | Tailscale |
-| seeed | 100.76.45.91 | seeed | 0 | no | Tailscale |
+| seeed | 100.76.45.91 | seeed0 | 0 | no | Tailscale; user renamed seeed→seeed0 2026-08-11 |
+| seeed0-lan | 192.168.4.35 | seeed0 | 0 | no | LAN; Ubuntu 24.04 mini PC, hostname seeed0 |
 | steven | 100.108.64.20 | steven | 1 | no | Tailscale |
 | recamera | 192.168.42.1 | recamera | - | no | Direct LAN |
 | recamera-10 | 192.168.2.10 | recamera | kkk000++ | no | LAN |

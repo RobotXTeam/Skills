@@ -29,6 +29,8 @@ AE Agent 是一个自动化工程代理，用于根据知识库部署项目到 r
   - `cpp-runtime.md` - C++ 运行时基线
   - `model-conversion.md` - 模型转换方法论
   - `receiver-recording.md` - 接收端录制方法
+  - `device-ops.md` - 设备操作（访问、SSH/SCP、服务、隧道截图、模型、证据）
+  - `project-layout.md` - demo 项目放置和目录规范
   - `live-osd-display.md` - 本机实时 OSD 显示（UDP 直推，用户审核一等能力）
 
 ## Environments
@@ -45,47 +47,28 @@ AE Agent 是一个自动化工程代理，用于根据知识库部署项目到 r
 
 模板文件用于生成标准化输出：
 
-- `templates/demo-wiki.md` - Demo Wiki 模板
+- `templates/wiki-output.md` - Demo Wiki 模板
 
 ## Cloud Asset Publishing
 
-Demo 输出工作流中，模型文件、完整证据图片和证据视频不提交到 GitHub 仓库，必须通过 Steven 本机已经登录的 rclone Google Drive remote 发布：
+模型文件、完整证据图片和证据视频不提交到 GitHub 仓库，必须通过 Steven 本机已登录的 rclone Google Drive remote 发布。固定常量：
 
-- Remote：`agent:`
+- Remote：`agent:`（只配置在 Steven 本机，seeed 上没有）
 - Wiki 根目录公开链接：`https://drive.google.com/drive/folders/1GOQUMCel7fapbJCWzEEynDIvIt-6Wf5p?usp=drive_link`
-- 运行包目录：`agent:reCamera_Shared/Wiki/<demo_name>/run/`
-- 模型目录：`agent:reCamera_Shared/Wiki/<demo_name>/model/`
-- 证据图片目录：`agent:reCamera_Shared/Wiki/<demo_name>/evidence/image/`
-- 证据视频目录：`agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/`
-- 对外文档默认写法：贴 Wiki 根目录公开链接，并写清楚子路径 `/reCamera_Shared/Wiki/<demo_name>/run/`、`/reCamera_Shared/Wiki/<demo_name>/model/`、`/reCamera_Shared/Wiki/<demo_name>/evidence/image/`、`/reCamera_Shared/Wiki/<demo_name>/evidence/video/`。
-- 对外直达链接：可选。只有需要直达子目录时才分别使用 `rclone link` 为 `run/`、`model/`、`evidence/image/`、`evidence/video/` 生成公开链接，默认不要设置过期时间。遇到 Google Drive API rate limit 时不要反复重试，直接使用 Wiki 根目录公开链接加子路径。
+- 四个固定目录：`agent:reCamera_Shared/Wiki/<demo_name>/run/`、`.../model/`、`.../evidence/image/`、`.../evidence/video/`
+- 对外文档默认写法：贴 Wiki 根目录公开链接并写清四个子路径；默认不为每个子目录生成独立直达链接（避免 Google Drive API rate limit）
+
+**门禁**：上传必须在推送 GitHub 之前完成；上传后用 `curl -L -I` 验证根链接可公开访问，权限错误必须先修复再写文档。
+
+执行命令（登录验证、reconnect、mkdir、带 `--filter` 的上传、访问验证）统一见 `environments/seeed-recamera/network.md` 的"云端资产发布"一节。
 
 ## GitHub Completeness Gate
 
-所有推送到 `RobotXTeam/sscma-example-sg200x` 的 demo 代码必须是完整项目代码，不是只保存本机可运行的碎片：
+所有推送到 `RobotXTeam/sscma-example-sg200x` 的 demo 必须是完整项目代码：外部用户 clone GitHub 后，再从 Google Drive 拉取 README/Wiki 声明的模型和运行库，应能编译出 reCamera 可执行程序并正常运行。不允许把 Steven/seeed 私有绝对路径下的文件当隐式依赖；公开构建命令使用 `$REPO_ROOT`、`$SDK_ROOT`、`$TOOLCHAIN_BIN` 等可迁移变量。
 
-- GitHub 仓库必须包含所有源码、构建脚本、CMake/Make 配置、README、部署脚本和少量关键证据，使外部用户 clone 后可以按文档编译出 reCamera 可执行程序。
-- 大模型、完整证据图片/视频、运行时大库不放 GitHub；必须放到 Google Drive 的固定 `run/`、`model/`、`evidence/` 子目录，并在 README/Wiki 写清楚文件名和路径。
-- 用户 clone GitHub 后，再从 Google Drive 拉取 README/Wiki 指定的模型和必要运行库，应能编译出完整可执行文件，并能部署到 reCamera 正常运行。
-- 不能把只在 Steven 或 seeed 私有绝对路径下存在的文件当作隐式依赖；公开构建命令必须使用相对路径或 `$REPO_ROOT`、`$SDK_ROOT`、`$TOOLCHAIN_BIN`、`$DEMO_DIR` 等可迁移变量。
+**每个 demo 必须有 `run/` 开箱即跑包**：用户拉 `run/` + `model/` 就能不编译、直接在 reCamera 跑通。规格见 `environments/seeed-recamera/development-policy.md`。
 
-推送 GitHub 之后、最终发布/写定 Wiki 之前，必须做一次 GitHub 干净克隆验证闭环：
-
-1. 在固定测试线/干净验证目录中从 GitHub 拉取最新 `main`，确认 commit 是刚推送的版本。
-2. 按公开 README/Wiki 的构建命令编译 demo，确认产物是 reCamera 可运行的 RISC-V musl ELF。
-3. 从 Google Drive 拉取该 demo 声明的 `run/`、`model/` 和必要运行库。
-4. 将干净克隆编译出的可执行程序和 Drive 资产部署到 reCamera，按公开运行命令启动并采集验收证据。
-5. 只有 GitHub clone -> Drive assets -> build -> deploy -> run -> evidence 全链路通过，才算一次完整的 demo GitHub 推送；否则回到 `seeed:/home/seeed/sscma-example-sg200x` 修改、重新提交推送，并重复验证直到通过。
-
-### run/ 开箱即跑包（核心要求）
-
-Google Drive 是给用户拉运行所需文件的地方。**每个 demo 必须有 `run/` 文件夹，让用户拉下来配合 `model/` 就能直接在 reCamera 上跑通，无需编译、不出 Google Drive 就能拿齐运行所需的一切。** `run/` 内容：
-
-- **reCamera 可执行程序**（交叉编译好的 RISC-V ELF，如 `onvif_yolo`、`gb28181_client`、`ppocr-reader`）。一般一个可执行文件即可。
-- **`README.md`**：精简的开箱即跑说明——下载哪些文件（含 `../model/` 的模型）、放到设备什么目录、停哪些服务、完整运行命令（threshold 使用实测效果最好的值，优先从相对较低置信度起步调参）、怎么验收。面向"拉下来简单看一下就能跑"的用户。
-- **运行时依赖**：仅当系统库不够时才放。例如 GB28181 需要的 SIP 库 `lib/libeXosip2.so.* libosip2.so.* libosipparser2.so.*`；一键脚本如 `run_rtmp.sh` / `run_on_device.sh`。普通 demo 设备自带 `/mnt/system/lib` 等即可，无需额外库。
-- 可执行文件不要 strip 也行，但要确认是设备架构（`file` 应显示 `RISC-V ... ld-musl-riscv64*`）。
-- 模型仍放 `model/`，不要重复塞进 `run/`；README 指引用户把两者放到设备同一目录。
+**门禁**：推送 GitHub 之后、最终写定 Wiki 之前，必须做干净克隆验证闭环——GitHub clone -> Drive assets -> build -> deploy -> run -> evidence 全链路通过才算完整；否则回到 `seeed:/home/seeed/work/sscma-example-sg200x` 修改重推，重复验证直到通过。验证原则见 `environments/seeed-recamera/development-policy.md`（Post-Push Verification Gate）和 `knowhubs/reCamera_KnowHub/project-layout.md`（Post-Push Clean Verification）。
 
 ## Visual Quality Baseline Gate
 
@@ -104,44 +87,9 @@ Google Drive 是给用户拉运行所需文件的地方。**每个 demo 必须�
 
 
 
-执行 demo 输出时必须先验证 rclone 登录状态：
+执行 demo 输出时必须先验证 rclone 登录状态（`rclone listremotes` + `rclone lsd agent:reCamera_Shared/Wiki --max-depth 1`）。登录/重连规则、上传命令和访问验证统一见 `environments/seeed-recamera/network.md` 的"云端资产发布"一节，全部在 Steven 本机执行。
 
-```bash
-rclone listremotes
-rclone lsd agent:reCamera_Shared/Wiki --max-depth 1
-```
-
-登录/重连规则：
-
-- 如果 `agent:` 存在但访问失败，先在 Steven 本机执行 `rclone config reconnect agent:` 重新走 OAuth 授权。
-- 如果 `agent:` 不存在，在 Steven 本机执行 `rclone config` 新建 Google Drive remote，名称必须为 `agent`，scope 使用 `drive`。
-- 配置文件位于 `~/.config/rclone/rclone.conf`，正常应包含可自动续期的 `refresh_token`。
-- 不要把 rclone token、配置文件内容或任何密钥写入 wiki、README、GitHub 仓库或报告。
-
-云端资产上传完成后必须验证用户可访问。默认验证 Wiki 根目录公开链接即可：
-
-```bash
-WIKI_ROOT_LINK="https://drive.google.com/drive/folders/1GOQUMCel7fapbJCWzEEynDIvIt-6Wf5p?usp=drive_link"
-curl -L -I "$WIKI_ROOT_LINK"
-```
-
-上传命令：
-
-```bash
-rclone copy <local-run-dir> agent:reCamera_Shared/Wiki/<demo_name>/run/ --progress
-rclone lsf -R agent:reCamera_Shared/Wiki/<demo_name>/run/
-
-rclone copy <local-model-dir> agent:reCamera_Shared/Wiki/<demo_name>/model/ --progress
-rclone lsf agent:reCamera_Shared/Wiki/<demo_name>/model/
-
-rclone copy <local-evidence-image-dir> agent:reCamera_Shared/Wiki/<demo_name>/evidence/image/ --progress
-rclone lsf agent:reCamera_Shared/Wiki/<demo_name>/evidence/image/
-
-rclone copy <local-evidence-video-dir> agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/ --progress
-rclone lsf agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/
-```
-
-`curl` 应返回可公开打开的 HTTP 响应（例如 200 或 Google Drive 的公开页面跳转）。验证通过后，README 和 Wiki 必须同时贴出 Wiki 根目录公开链接和精确子路径（`run/`、`model/`、`evidence/image/`、`evidence/video/`）；运行包部分列出可执行文件名和 `run/README.md`，模型部分列出需要下载的模型文件名，证据部分列出关键证据文件名。不要只写 `<path-to-model>` 占位。`run/` 必须能让用户拉下来直接跑通。
+**安全**：不要把 rclone token、配置文件内容或任何密钥写入 wiki、README、GitHub 仓库或报告。
 
 ## Workflows
 
@@ -151,11 +99,11 @@ rclone lsf agent:reCamera_Shared/Wiki/<demo_name>/evidence/video/
 
 ## Success Records
 
-成功记录文件记录每次完整执行 Demo 输出工作流（0-19 全部步骤）并成功完成的 demo：
+成功记录文件记录每次完整执行 Demo 输出工作流（0-18 全部步骤）并成功完成的 demo：
 
-- `success-records.md` - Demo 成功记录
+- `knowhubs/reCamera_KnowHub/success-records.md` - Demo 成功记录
 
-**重要**：只有完成全部 0-19 步（从检查历史记录、质量基准评测到最终写定 Wiki）才能写入成功记录。用户中途停止、某一步失败、质量门未通过、或 GitHub 验证闭环未通过，都不算成功，不写入记录。
+**重要**：只有完成全部 0-18 步（从检查历史记录、质量基准评测到最终写定 Wiki）才能写入成功记录。用户中途停止、某一步失败、质量门未通过、或 GitHub 验证闭环未通过，都不算成功，不写入记录。
 
 ## Usage
 

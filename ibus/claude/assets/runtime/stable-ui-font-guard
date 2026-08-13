@@ -10,10 +10,14 @@ mkdir -p "$log_dir"
 
   desired_font='Noto Sans CJK SC 11'
   desired_mono='Noto Sans Mono CJK SC 13'
+  desired_candidate_font='Noto Sans CJK SC 12'
 
   current_font="$(gsettings get org.gnome.desktop.interface font-name 2>/dev/null || true)"
   current_doc="$(gsettings get org.gnome.desktop.interface document-font-name 2>/dev/null || true)"
   current_mono="$(gsettings get org.gnome.desktop.interface monospace-font-name 2>/dev/null || true)"
+  current_panel_font="$(gsettings get org.freedesktop.ibus.panel custom-font 2>/dev/null || true)"
+  current_use_custom="$(gsettings get org.freedesktop.ibus.panel use-custom-font 2>/dev/null || true)"
+  current_use_glyph="$(gsettings get org.freedesktop.ibus.panel use-glyph-from-engine-lang 2>/dev/null || true)"
 
   if [ "$current_font" != "'$desired_font'" ]; then
     gsettings set org.gnome.desktop.interface font-name "$desired_font"
@@ -28,6 +32,21 @@ mkdir -p "$log_dir"
   if [ "$current_mono" != "'$desired_mono'" ]; then
     gsettings set org.gnome.desktop.interface monospace-font-name "$desired_mono"
     printf 'restored monospace-font-name to %s\n' "$desired_mono"
+  fi
+
+  if [ "$current_panel_font" != "'$desired_candidate_font'" ]; then
+    gsettings set org.freedesktop.ibus.panel custom-font "$desired_candidate_font"
+    printf 'restored ibus panel custom-font to %s\n' "$desired_candidate_font"
+  fi
+
+  if [ "$current_use_custom" != "true" ]; then
+    gsettings set org.freedesktop.ibus.panel use-custom-font true
+    printf 'restored ibus panel use-custom-font to true\n'
+  fi
+
+  if [ "$current_use_glyph" != "true" ]; then
+    gsettings set org.freedesktop.ibus.panel use-glyph-from-engine-lang true
+    printf 'restored ibus panel use-glyph-from-engine-lang to true\n'
   fi
 
   printf 'font settings are consistent\n'
