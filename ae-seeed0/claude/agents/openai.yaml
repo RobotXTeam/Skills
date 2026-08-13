@@ -1,0 +1,4 @@
+interface:
+  display_name: "ae"
+  short_description: "AE Agent for Seeed reCamera: wiki QA, technical support, demo deployment"
+  default_prompt: "Validate a reCamera wiki page or deploy a custom NPU model demo on seeed0 (CPU-only host, no GPU), collect evidence, and report reproducibility."

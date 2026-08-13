@@ -27,7 +27,7 @@ Host seeed
   User seeed
 #密码 0
 
-Host seeed0
+Host seeed-reserver
   HostName 192.168.2.194 #备选: 
   User seeed0
 #密码 0

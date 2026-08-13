@@ -166,3 +166,14 @@ sshpass -p '1' ssh -p 10023 \
   steven@127.0.0.1 'hostname; echo renamed-forward-ok'
 ```
 
+## 2026-08-13 addendum: seeed0 upgrade to v0.3.6
+
+- Device: `seeed` mini PC (hostname seeed-IdeaCentre-GeekPro-14IOB), Ubuntu 22.04 amd64, virtual IP `10.88.222.222`. Unix user is now `seeed0` (renamed 2026-08-11, password `0`, aliases `seeed`/`seeed0-lan`).
+- The systemd unit runs `/opt/linkbit/linkbit-agent`, but the deb installs to `/usr/bin/linkbit-agent`. Upgrade BOTH: `dpkg -i linkbit-agent_0.3.6_linux_amd64.deb` then `install -m755` the raw release binary over `/opt/linkbit/linkbit-agent` (back up the old one first). Verify with `sha256sum` against release `checksums.txt`.
+- Upgrade keeps the state file; no re-enrollment needed.
+- Gotcha: `LINKBIT_HEALTH_SECONDS=300` makes the device flap online/offline because the controller offline threshold is shorter. Use `30`.
+- CLI login: the `steven` account password is unknown; carry over a valid workstation session token into `~/.config/linkbit/config.json` instead of `linkbit login`.
+- CLI binaries (`linkbit`, `linkping`) ship in `linkbit_v0.3.6_linux_amd64.tar.gz`; install to `/usr/local/bin`.
+- `linkping` from this device reports `via relay` (its env keeps `LINKBIT_WG_DRY_RUN=true`, no `linkbit0` interface). All online devices reachable; offline devices (`orangepi`, `steven-ubuntu`) correctly rejected. Relay SSH proven end-to-end: `linkbit-agent forward --listen 127.0.0.1:10024 --target steven:22` + `ssh -p 10024 steven@127.0.0.1`.
+- Session token of user `steven` works as `Authorization: Bearer` for `GET /api/v1/devices`; policy listing still needs the admin key.
+
