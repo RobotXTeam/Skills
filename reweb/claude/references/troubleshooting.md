@@ -36,7 +36,7 @@
 
 - A gallery app and Node-RED cannot both own the camera; mode file and S/K prefixes decide.
 - Do not `kill -9` camera services as part of a routine deploy. Stop only the Supervisor when needed.
-- If the device is stuck in an unknown mode, use the existing `.force_console` recovery path through `setRunMode` or the force-console UI, not a manual service deletion.
+- If the device is stuck in an unknown mode, use the existing `legacy `.force_console`` recovery path through `setRunMode` or the force-Studio UI, not a manual service deletion.
 
 ## Restore after aggressive cleanup
 

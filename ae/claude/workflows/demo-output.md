@@ -202,7 +202,7 @@
 - 录制视频流和图片必须要有足够的证据，比如实时 OSD 检测框或者 OSD 数据在画面上，或者导出来在 seeed 主机上叠加。用户看到视频后应能直接理解这个 demo 的视觉效果。
 - 最终证据视频应优先使用第 8 步质量门已通过的模型、阈值、NMS 和后处理参数。
 
-#### 11.0 本机实时 OSD 显示（先于录制）
+### 12. 本机实时 OSD 显示（先于录制）
 
 录制最终证据前，先在本机弹一个**实时 OSD 窗口**让用户看实时画面，确认检测框/掩码/告警横幅正确、阈值合适，再录。这是用户审核的一等能力（实时看 + 留证据）。
 
@@ -221,16 +221,16 @@ sudo python3 udp_sender.py /home/recamera/<demo>/live <本机IP> 9200
 验收：sender 日志 `sent N frames, X fps` ≈ 摄像头产帧率；本机日志 `pkts=.. complete=..` 中 complete≈sent 即零丢包；窗口里实时帧带正确 OSD。注意：别用 `kill -9` 停摄像头（会泄漏 VPSS 导致下次起不来，见 live-osd-display.md 坑列表）。
 
 
-### 12. 用户审核
+### 13. 用户审核
 
 在本机打开视频，由用户审核：
 - 内容是否正确
 - 效果是否通过
 - 是否需要调整
 
-用户审核包含两条腿：第 11.0 步的**本机实时 OSD 显示**（看实时、调阈值/颜色规则）+ 本步的**录制证据回看**（确认最终视频/截图）。两者都通过才算审核完成。
+用户审核包含两条腿：第 12 步的**本机实时 OSD 显示**（看实时、调阈值/颜色规则）+ 本步的**录制证据回看**（确认最终视频/截图）。两者都通过才算审核完成。
 
-### 13. 生成 Wiki 草稿文档
+### 14. 生成 Wiki 草稿文档
 
 如果用户审核通过，先生成 Wiki 草稿文档。注意：此时只能作为草稿，不要最终发布/写定 Wiki；最终 Wiki 必须等 GitHub 干净克隆验证闭环通过后再确认。
 
@@ -242,7 +242,7 @@ sudo python3 udp_sender.py /home/recamera/<demo>/live <本机IP> 9200
 - README/Wiki 草稿必须写清楚：GitHub 源码路径、Google Drive 根目录链接、`run/`、`model/`、`evidence/image/`、`evidence/video/` 精确子路径、运行包文件名、模型文件名、必要运行库文件名、公开构建命令和公开运行命令。
 - README/Wiki 草稿必须包含质量基准摘要：模型数据集来源、固定输入来源、baseline 命令、reCamera 命令、评分指标、通过阈值、实际得分、关键失败样本说明（如有）。
 
-### 14. 上传运行包、模型和证据到 Google Drive
+### 15. 上传运行包、模型和证据到 Google Drive
 
 在推送 GitHub 前，把本 demo 的**运行包(run/)**、模型、完整证据图片、证据视频发布到 Google Drive。`run/` 让用户拉下来直接在 reCamera 跑通：
 
@@ -255,17 +255,17 @@ sudo python3 udp_sender.py /home/recamera/<demo>/live <本机IP> 9200
 - README 和 Wiki 必须同时包含固定 Wiki 根目录链接、四个子路径（run/model/image/video）、`run/` 可执行文件名、模型文件清单、关键证据图片/视频文件清单。
 
 
-### 15. 推送到 GitHub
+### 16. 推送到 GitHub
 
 用户确认 demo 和文档无误后，在 seeed 上（仓库 `/home/seeed/work/sscma-example-sg200x`）提交并推送：确认 Clash 代理配置（见 `environments/seeed-recamera/network.md`"代理配置"）→ `git pull origin main` → 复制 `<demo_name>_Demo_Wiki.md`、`DEPLOY_REPORT.md`、`eval/qa_report.md` 到 `solutions/sesg-project/<demo_name>/wiki/`，复制 1-3 张关键证据帧到 `evidence/` → `git add` → `git commit` → `git push origin main`。复制-推送命令序列参考 `knowhubs/reCamera_KnowHub/capability-map.md` 的"同步流程"。
 
 **注意事项：**
 - 提交前检查 `git status` 确认没有意外文件
-- 不要提交 `.cvimodel`、`.onnx`、`.pth`、`.pt` 等大模型文件到 GitHub；它们必须在第 14 步已上传到 `agent:reCamera_Shared/Wiki/<demo_name>/model/`
-- 证据截图只复制关键帧（1-3 张）到 GitHub，完整证据图片在第 14 步已上传 Drive 的 `evidence/image/`，证据视频在 `evidence/video/`
+- 不要提交 `.cvimodel`、`.onnx`、`.pth`、`.pt` 等大模型文件到 GitHub；它们必须在第 15 步已上传到 `agent:reCamera_Shared/Wiki/<demo_name>/model/`
+- 证据截图只复制关键帧（1-3 张）到 GitHub，完整证据图片在第 15 步已上传 Drive 的 `evidence/image/`，证据视频在 `evidence/video/`
 - GitHub 提交内容与 Drive 上传内容的划分，见本文末尾"推送到 GitHub 的内容"表和 `environments/seeed-recamera/network.md` 的"GitHub 仓库"一节
 
-### 16. GitHub 干净克隆验证闭环
+### 17. GitHub 干净克隆验证闭环
 
 推送到 GitHub 后，**不要立即把 Wiki 当作最终完成**。必须在固定测试线/干净验证目录中拉取刚推送的 GitHub 版本，验证外部用户路径是否完整。
 
@@ -314,22 +314,22 @@ rclone copy agent:reCamera_Shared/Wiki/<demo_name>/model/ <local-staging>/model/
 - reCamera 部署路径和公开运行命令。
 - 验收证据文件名和保存位置。
 
-### 17. 最终写定 Wiki
+### 18. 最终写定 Wiki
 
-只有第 16 步验证闭环通过后，才可以把 Wiki 草稿写定为最终 Wiki：
+只有第 17 步验证闭环通过后，才可以把 Wiki 草稿写定为最终 Wiki：
 
 - 不要写”理论可运行”或”本机验证通过”；必须写清楚 GitHub 干净 clone 后的真实验证结果。
 - Wiki 中的构建命令、部署命令、运行命令必须与闭环验证中实际使用的公开命令一致。
 - Wiki 中的 Google Drive 路径必须能让用户拿到所有 GitHub 不提交但运行必需的模型和库。
-- 如果验证过程中发现 README/Wiki 命令不完整，必须先修 GitHub 代码或文档，重新推送并重跑第 16 步。
+- 如果验证过程中发现 README/Wiki 命令不完整，必须先修 GitHub 代码或文档，重新推送并重跑第 17 步。
 
-### 18. 更新成功记录
+### 19. 更新成功记录
 
-**只有完成上述 0-18 全部步骤，才能执行此步骤。**
+**只有完成上述 0-19 全部步骤，才能执行此步骤。**
 
 如果用户中途停止、某一步失败、用户未审核通过、或 GitHub 验证闭环未通过，则**不写入成功记录**。
 
-完成全部 0-18 步后，更新 `knowhubs/reCamera_KnowHub/success-records.md`：
+完成全部 0-19 步后，更新 `knowhubs/reCamera_KnowHub/success-records.md`：
 
 ```markdown
 ### <demo_name> (<date>)

@@ -27,17 +27,16 @@ Field-tested observations on Steven's hardware for WPA2 monitor/injection work. 
 
 ## Raspberry Pi 4 — Cypress/Infineon CYW43455 (built-in)
 
-- Driver: `brcmfmac`.
-- Monitor mode: STABLE, captures EAPOL reliably. aarch64 + aircrack-ng well-supported in community.
+- Driver: `brcmfmac` (fullmac). Firmware BCM4345/6 wl0 7.45.265.
+- **Monitor mode: NOT SUPPORTED (verified 2026-08-26).** `iw phy phy0 info` lists only IBSS/managed/AP/P2P-client/P2P-GO/P2P-device — no monitor. `iw dev wlan0 set type monitor` fails with `-95 Operation not supported`. Valid interface combinations contain no monitor either. The older claim "Pi monitor STABLE" was untested community lore — FALSE.
 - Injection: NOT supported by brcmfmac.
-- Use case: passive capture host. Pair with a wired connection for SSH (Pi 4 has Ethernet).
+- Use case: WIRED attack box only (SSH over Ethernet), offline cracking host. On-Pi cracking: hashcat 6.2.5 + POCL crashed on aarch64 (`free(): invalid next size`, mode 22000, with and without `-O`) — use aircrack-ng with dictionary files or FIFO candidate streams instead.
 
 ## Raspberry Pi 5 — Cypress/Infineon CYW43456 (built-in)
 
-- Driver: `brcmfmac`.
-- Monitor mode: STABLE. Adds 5GHz / 802.11ac support.
+- Driver: `brcmfmac` (fullmac) — same architecture as Pi 4, so expect the SAME no-monitor limitation (not separately verified). Adds 5GHz / 802.11ac support.
 - Injection: NOT supported.
-- Use case: same as Pi 4, plus 5GHz AP capture.
+- Use case: wired attack box / cracking host, same as Pi 4.
 
 ## Recommended injection-capable USB cards (for active deauth)
 
@@ -64,7 +63,7 @@ Field-tested observations on Steven's hardware for WPA2 monitor/injection work. 
 | Goal | Best hardware on hand |
 |------|---------------------|
 | Run the honeypot AP | seeed (RTL8822CE, stable hostapd) |
-| Passive handshake capture | Raspberry Pi 4/5 built-in, or AX210 if available |
+| Passive handshake capture | NO monitor-capable card currently on hand (seeed's RTL8822CE can monitor but is usually the AP host; steven's Intel misses EAPOL; Pi has no monitor). Fallback: AP-side tcpdump on a self-owned hotspot, or buy RTL8812AU/AR9271. |
 | Active deauth capture | NEED RTL8812AU / AR9271 USB card (none currently on hand) |
 | Offline brute-force (GPU) | AMD 780M laptop |
 | Offline brute-force (CPU, small dict) | steven i5-13500H |

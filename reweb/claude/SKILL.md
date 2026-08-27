@@ -1,18 +1,19 @@
 ---
 name: reweb
-description: Develop the sscma-example-sg200x reCamera Supervisor frontend and backend against Steven's live reCamera through OpenWrt, including Vite preview, API/WebSocket tunnels, cross-compilation, backed-up device deployment, verification, and rollback. Use when continuing this console UI project, modifying Supervisor/Node-RED integration, deploying to 192.168.2.102, or asking for real-time reCamera full-stack development.
+description: Develop the sscma-example-sg200x reCamera Supervisor frontend and backend against Steven's live reCamera (default 192.168.42.1 over USB-RNDIS), including Vite preview, API/WebSocket tunnels, cross-compilation, backed-up device deployment, verification, and rollback. Use when continuing this reCamera Studio UI project, modifying Supervisor/Node-RED integration, deploying to a reCamera, or asking for real-time reCamera full-stack development.
 ---
 
 # reCamera Live Full-Stack Development
 
-Use this skill for the ongoing reCamera console in `/home/steven/sscma-example-sg200x`. It complements the `recamera` Wiki QA/NPU-demo skill; it does not replace it.
+Use this skill for the ongoing reCamera Studio in `/home/steven/sscma-example-sg200x`. It complements the `recamera` Wiki QA/NPU-demo skill; it does not replace it.
 
 ## Fixed project topology
 
 - Repository: `/home/steven/sscma-example-sg200x`
 - Frontend: `solutions/supervisor/www` (React 18, TypeScript, Vite)
 - Backend: `solutions/supervisor/main` plus `rootfs/usr/share/supervisor/scripts/main.sh`
-- Device: `192.168.2.102`, reached through OpenWrt
+- Device: `192.168.42.1` by default, attached through USB-RNDIS and reached directly from the workstation (host side `192.168.42.x`); not routable through OpenWrt. The older `192.168.2.102` remains supported behind the OpenWrt jump.
+- Transport selection: `RECAMERA_DIRECT=auto` (default) probes the route table and prefers the direct link; `1|yes|true` forces direct SSH, `0|no|false` forces the OpenWrt jump. The choice is latched per host for 12h under `$RUN_DIR/transport.<host>` so chained scripts share one path.
 - OpenWrt SSH target: `root@10.88.92.200` by default; override with `OPENWRT_SSH_TARGET`
 - Local forwards:
   - `127.0.0.1:18080` -> device `:80` (Supervisor HTTP)
@@ -39,7 +40,7 @@ When invoked with `/reweb` and a request such as `继续开发 reCamera web，�
 4. Reload the page and verify real device content, current network failures, and connection state.
 5. Leave the preview open for continued development.
 
-Do not deploy to the device unless the invocation explicitly requests deployment.
+After completing and verifying a reCamera Supervisor Web change, deploy the finished change to the live device by default. Do not wait for a separate deployment request. This standing authorization covers routine frontend, Supervisor backend, and narrowly required runtime-file deployment through the backed-up `reweb` workflow. It does not authorize firmware flashing, device reboot, destructive operations, run-mode changes, network reconfiguration, or unrelated device writes; those still require an explicit request.
 
 ## Standard workflow
 
@@ -56,9 +57,20 @@ Do not deploy to the device unless the invocation explicitly requests deployment
 5. Modify the narrowest relevant layer. Use `src/utils/deviceProxy.ts` for service URLs and existing request helpers for API calls.
 6. Run the frontend production build and `git diff --check`.
 7. Verify through Browser Preview against real device data: console, server log, network, snapshot, interactions, responsive layout, then screenshot.
-8. Deploy only when the user explicitly asks for device installation. Previewable frontend work normally stops at local Vite verification.
+8. Deploy the verified completed change to the live device by default. Run a fresh read-only preflight and deployment dry-run, identify the exact files, preserve mode/service state, create a timestamped backup, stage under `/tmp`, keep rollback active, and verify the real device boundary after replacement.
+9. Leave the device in a healthy final state and report the backup path, verification results, and exact rollback command.
 
 Detailed commands are in [development-workflow.md](references/development-workflow.md).
+
+## Browser MCP usage
+
+Use browser MCP only when visual verification is necessary.
+
+Avoid screenshots unless required.
+
+Do not retain or repeatedly inspect full-page screenshots.
+
+Use DOM/text inspection where possible.
 
 ## Live preview layout rules (must not regress)
 
@@ -90,7 +102,7 @@ Before every device write:
 - upload to `/tmp`, validate there, then replace;
 - keep a rollback trap active until post-deploy health checks pass.
 
-Never delete the Node-RED, sscma-node, or Supervisor init scripts. Never change console/Node-RED mode merely to deploy management code. Do not reboot for a frontend-only change. Do not call a routine frontend/backend copy a firmware flash; full firmware flashing is a separate, higher-risk operation and needs an explicit request.
+Never delete the Node-RED, sscma-node, or Supervisor init scripts. Never change reCamera Studio/Node-RED mode merely to deploy management code. Do not reboot for a frontend-only change. Do not call a routine frontend/backend copy a firmware flash; full firmware flashing is a separate, higher-risk operation and needs an explicit request.
 
 Read [safety-and-rollback.md](references/safety-and-rollback.md) before deploying.
 
@@ -106,7 +118,9 @@ Both deployment scripts are inert unless `--apply` is present. First inspect the
 /home/steven/.claude/skills/reweb/scripts/deploy-supervisor.sh --dry-run
 ```
 
-Then use `--apply` only after the user authorizes that device write. `deploy-web.sh` builds and swaps only `/usr/share/supervisor/www`; it does not restart the device. `deploy-supervisor.sh` builds and replaces the management binary, optionally the runtime shell/init files with `--include-runtime`, and restarts only Supervisor while preserving the persisted mode.
+Run the matching dry-run before every deployment, then use `--apply` as the default final step for a completed and verified routine change under the standing authorization above. `deploy-web.sh` builds and swaps only `/usr/share/supervisor/www`; it does not restart the device. `deploy-supervisor.sh` builds and replaces the management binary, optionally the runtime shell/init files with `--include-runtime`, and restarts only Supervisor while preserving the persisted mode.
+
+If the standard deployment script does not include every newly required artifact, extend and verify the script first or use an equivalently staged, backed-up, rollback-protected deployment. Never silently omit a runtime dependency.
 
 ## Verification standard
 
@@ -129,7 +143,7 @@ Use either form:
 ```
 
 ```text
-/reweb Continue the reCamera console project. Start the tunnels and preview, inspect current git changes, then implement <task>. Do not deploy until I explicitly ask.
+/reweb Continue the reCamera Studio project. Start the tunnels and preview, inspect current git changes, implement <task>, verify it, then deploy it through the backed-up workflow.
 ```
 
 ```text

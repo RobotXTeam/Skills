@@ -8,8 +8,10 @@ ibus_skill_backup="$HOME/.local/state/ibus-skill/app-install-$ibus_skill_stamp"
 mkdir -p "$ibus_skill_backup"
 
 ibus_skill_fix_target="$HOME/.local/bin/ibus-pinyin-display-fix"
+ibus_skill_safe_fix_target="$HOME/.local/bin/ibus-pinyin-display-fix-safe"
 ibus_skill_guard_target="$HOME/.local/bin/stable-ui-font-guard"
 ibus_skill_app_target="$HOME/.local/share/applications/ibus-pinyin-display-fix.desktop"
+ibus_skill_safe_app_target="$HOME/.local/share/applications/ibus-pinyin-display-fix-safe.desktop"
 ibus_skill_autostart_target="$HOME/.config/autostart/stable-ui-font-guard.desktop"
 ibus_skill_font_target="$HOME/.config/fontconfig/conf.d/60-steven-stable-ui-fonts.conf"
 ibus_skill_reload_uuid="safe-shell-reload@steven.local"
@@ -18,8 +20,10 @@ ibus_skill_reload_target="$HOME/.local/share/gnome-shell/extensions/$ibus_skill_
 
 for ibus_skill_target in \
   "$ibus_skill_fix_target" \
+  "$ibus_skill_safe_fix_target" \
   "$ibus_skill_guard_target" \
   "$ibus_skill_app_target" \
+  "$ibus_skill_safe_app_target" \
   "$ibus_skill_autostart_target" \
   "$ibus_skill_font_target" \
   "$ibus_skill_reload_target"; do
@@ -36,6 +40,8 @@ mkdir -p \
   "$HOME/.config/fontconfig/conf.d"
 
 install -m 0755 "$ibus_skill_runtime/ibus-pinyin-display-fix" "$ibus_skill_fix_target"
+install -m 0755 "$ibus_skill_runtime/ibus-pinyin-display-fix-safe" "$ibus_skill_safe_fix_target"
+install -m 0644 "$ibus_skill_runtime/ibus-pinyin-display-fix-safe.desktop" "$ibus_skill_safe_app_target"
 install -m 0755 "$ibus_skill_runtime/stable-ui-font-guard" "$ibus_skill_guard_target"
 install -m 0644 "$ibus_skill_runtime/60-steven-stable-ui-fonts.conf" "$ibus_skill_font_target"
 install -m 0644 "$ibus_skill_reload_source/metadata.json" "$ibus_skill_reload_target/metadata.json"

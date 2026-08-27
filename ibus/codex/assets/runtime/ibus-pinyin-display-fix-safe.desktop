@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=输入法拼音显示修复（安全版）
+Comment=不停止 IBus 服务，安全修复拼音候选框和系统中文空白、乱码问题
+Exec=/home/steven/.local/bin/ibus-pinyin-display-fix-safe
+Icon=preferences-desktop-keyboard
+Terminal=false
+Categories=Utility;
+StartupNotify=true

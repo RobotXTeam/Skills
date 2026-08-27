@@ -1,10 +1,10 @@
 # Demo 成功记录
 
-此文件记录每次完整执行 Demo 输出工作流（0-18 全部步骤）并成功完成的 demo。
+此文件记录每次完整执行 Demo 输出工作流（0-19 全部步骤）并成功完成的 demo。
 
 ## 成功标准
 
-**只有完成以下 0-18 全部步骤，才算成功，才能写入此文件：**
+**只有完成以下 0-19 全部步骤，才算成功，才能写入此文件：**
 
 0. 检查历史记录
 1. 搜索知识库
@@ -27,7 +27,7 @@
 18. 更新成功记录
 
 **以下情况不算成功，不写入此文件：**
-- 用户中途停止（未完成全部 0-18 步）
+- 用户中途停止（未完成全部 0-19 步）
 - 某一步失败后未继续
 - 质量门未通过
 - 用户未审核通过
@@ -92,3 +92,13 @@
 - 编译问题：INT8 姿态关键点抖动被 TSSTG 放大 → 换 BF16 姿态；seeed 代理整仓克隆 EOF → 稀疏部分克隆（--filter=blob:none + sparse-checkout）完成验证
 - 验证结果：质量门通过（存在 F1 0.990、IoU 0.926、动作 top-1 一致 1.00、Fall Down recall 1.0）；GitHub 干净克隆→构建 RISC-V musl ELF→部署→运行→证据闭环通过；用户跌倒视频端到端绿→红（首判 frame 192）
 - 关键经验：判定跟开源 argmax 无阈值（--fall-bias 0.15 默认更灵敏、~0.05 噪声底门控）；跌倒整屏变红；OSD PC 端叠加保原生 720p 画质且全中文；PC 跨网段时用 seeed USB + SSH 隧道 UDP 桥 fallback
+
+### yolo26_depth (2026-08-13)
+- 状态：✅ 成功
+- GitHub commit：31959ab
+- Google Drive 路径：`agent:reCamera_Shared/Wiki/yolo26_depth/`
+- 模型文件：yolo26n_depth_640_cv181x_bf16.cvimodel（640/512/448 int8 仅作参考，未过门）
+- 特殊依赖：PC 实时 OSD 窗口需 GUI 版 OpenCV（udp_viewer.py）
+- 编译问题：无（干净克隆一次编译出 RISC-V musl 可执行程序）
+- 验证结果：质量门通过（152 帧 pearson 0.9595 / rel_raw 0.0886 / δ1 0.9415；GT AbsRel 0.1487 vs teacher 0.1369）；实时 1080p OSD 预览用户审核通过；GitHub 干净克隆→构建→Drive 拉模型→reCamera 运行闭环通过
+- 关键经验：depth 头输出在 letterbox 画布坐标，必须 logit 尺度裁内容矩形再 resize（整画布拉伸 pearson ~0.70）；INT8 深度头精度不足发 BF16；ION OOM 根因是 face-analysis 后台服务持有 ION，SIGTERM 释放（不可 kill -9）；log-depth 后处理 depth=exp(logit-0.19384766)；live 约 0.6 fps（640 BF16）

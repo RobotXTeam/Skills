@@ -29,7 +29,7 @@ Production runs from the device origin and talks directly to device ports. Devel
 - Main shell: `src/components/recamera-shell`
 - Device subnavigation: `src/components/common-popup/DeviceInfoShell.tsx`
 - Shared device-page styling: `src/components/common-popup/rv1126b.css`
-- New console pages/shared styling: `src/components/app-config/recamera-new-pages.css`
+- New reCamera Studio pages/shared styling: `src/components/app-config/recamera-new-pages.css`
 - State: Zustand stores under `src/store`
 - i18n: `src/locales/zh-CN.json`, `src/locales/en-US.json`
 
@@ -47,12 +47,12 @@ The executable is installed as `/usr/local/bin/supervisor`. The HTTP API frequen
 
 ## Device run modes
 
-`/userdata/local/apps/mode` contains `console` or `nodered`.
+`/userdata/local/apps/mode` contains `recamera-studio` or `nodered`. The legacy value `console` is accepted during upgrade and normalized to `recamera-studio`.
 
-- `console`: Supervisor gallery application owns the camera; Node-RED and sscma-node are parked (`K03...`, `K91...`).
+- `recamera-studio`: reCamera Studio gallery applications own the camera; Node-RED and sscma-node are parked (`K03...`, `K91...`).
 - `nodered`: Node-RED/sscma-node own the camera and are armed (`S03...`, `S91...`).
 
-Use the existing `deviceMgr/getRunMode`, `setRunMode`, and force-console implementation for product behavior. Deployment must not switch modes as a convenience. Restarting Supervisor reads and reconciles the persisted mode.
+Use the existing `deviceMgr/getRunMode`, `setRunMode`, and `forceStudio` implementation for product behavior. Deployment must not switch modes as a convenience. Restarting Supervisor reads and reconciles the persisted mode.
 
 ## Build boundaries
 

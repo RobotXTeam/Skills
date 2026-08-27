@@ -166,14 +166,31 @@ sshpass -p '1' ssh -p 10023 \
   steven@127.0.0.1 'hostname; echo renamed-forward-ok'
 ```
 
-## 2026-08-13 addendum: seeed0 upgrade to v0.3.6
+## 2026-08-13 addendum: fleet identities and the seeed-reserver install
 
-- Device: `seeed` mini PC (hostname seeed-IdeaCentre-GeekPro-14IOB), Ubuntu 22.04 amd64, virtual IP `10.88.222.222`. Unix user is now `seeed0` (renamed 2026-08-11, password `0`, aliases `seeed`/`seeed0-lan`).
-- The systemd unit runs `/opt/linkbit/linkbit-agent`, but the deb installs to `/usr/bin/linkbit-agent`. Upgrade BOTH: `dpkg -i linkbit-agent_0.3.6_linux_amd64.deb` then `install -m755` the raw release binary over `/opt/linkbit/linkbit-agent` (back up the old one first). Verify with `sha256sum` against release `checksums.txt`.
-- Upgrade keeps the state file; no re-enrollment needed.
-- Gotcha: `LINKBIT_HEALTH_SECONDS=300` makes the device flap online/offline because the controller offline threshold is shorter. Use `30`.
-- CLI login: the `steven` account password is unknown; carry over a valid workstation session token into `~/.config/linkbit/config.json` instead of `linkbit login`.
-- CLI binaries (`linkbit`, `linkping`) ship in `linkbit_v0.3.6_linux_amd64.tar.gz`; install to `/usr/local/bin`.
-- `linkping` from this device reports `via relay` (its env keeps `LINKBIT_WG_DRY_RUN=true`, no `linkbit0` interface). All online devices reachable; offline devices (`orangepi`, `steven-ubuntu`) correctly rejected. Relay SSH proven end-to-end: `linkbit-agent forward --listen 127.0.0.1:10024 --target steven:22` + `ssh -p 10024 steven@127.0.0.1`.
+### Identity map (avoid this confusion)
+
+- ssh alias `seeed` (Tailscale 100.76.45.91) lands on `seeed-IdeaCentre-GeekPro-14IOB`, Ubuntu 22.04 — that box is the Linkbit device named **`seeed`** (10.88.222.222). It is NOT "the seeed0 machine". It was upgraded to 0.3.6 on 2026-08-13 (update BOTH `/usr/bin/linkbit-agent` via deb AND `/opt/linkbit/linkbit-agent` which the service runs; verify sha256 vs release `checksums.txt`).
+- The real seeed0 machine is Linkbit device **`seeed-reserver`**: hostname `seeed0`, Ubuntu 24.04, reached at `seeed0@192.168.2.194` (also NIC 192.168.4.35), password `0`. Device id `94c3c811-b2fe-443c-b51d-813b30882657`, virtual IP `10.88.106.235`.
+
+### seeed-reserver install (2026-08-13, agent 0.3.6)
+
+- Fresh install: `dpkg -i linkbit-agent_0.3.6_linux_amd64.deb` (only /usr/bin binaries, no unit), then run `deploy/install-agent.sh` with the raw binary staged at `./bin/linkbit-agent` — it installs `/opt/linkbit/linkbit-agent` and the hardened systemd unit.
+- **No admin key needed to enroll**: `POST /api/v1/devices/register` falls back to session auth when no enrollment key is provided. Set `LINKBIT_SESSION_TOKEN=<valid user session token>` in `/etc/linkbit/agent.env` instead of `LINKBIT_ENROLLMENT_KEY`.
+- Installed wireguard-tools; `LINKBIT_WG_DRY_RUN=false` brings up a real `linkbit0`.
+- CLI login: the `steven` account password is unknown; carry over a valid workstation session token into `~/.config/linkbit/config.json`.
 - Session token of user `steven` works as `Authorization: Bearer` for `GET /api/v1/devices`; policy listing still needs the admin key.
+
+### Operational lessons
+
+- Gotcha: `LINKBIT_HEALTH_SECONDS=300` makes a device flap online/offline because the controller offline threshold is shorter. Use `30`.
+- Fleet-wide as of 2026-08-13: NO device completes a WireGuard handshake with the hub (even the healthy workstation shows `transfer: 0 B received`, no latest handshake, mesh ICMP 100% loss). Likely hub UDP/443 not reachable or hub WG not configured on the controller. The working transport everywhere is TCP relay: `linkping` reports `via relay`, `linkbit-agent forward` carries real SSH fine. Don't chase per-device WG config for this.
+- Verified connectivity from seeed-reserver via relay: steven 220ms, aliyun-cloud 86ms, radxa-cubie-a7a 164ms, friendlywrt 261ms, seeed 121ms; orangepi and steven-ubuntu correctly reported offline. Relay SSH to steven:22 tested end-to-end.
+
+### 2026-08-19 re-sweep (one week later)
+
+- All Linkbit paths still healthy via relay (steven ~70ms, aliyun-cloud ~100ms, radxa ~115ms, seeed ~118ms, friendlywrt ~179ms); seeed-reserver had a transient controller-path timeout window (~12:45-12:55 local) that self-recovered.
+- OS-level real logins through relay: `steven` (steven/1) OK; `seeed` device OK — **the GeekPro SSH user is `seeed` with password 0, NOT seeed0** (inventory was wrong; seeed0 belongs to the other box). Relay fidelity proven by matching host keys. GeekPro LAN IP: 192.168.2.113; its Tailscale path (100.76.45.91) was broken at kex that day.
+- No-cred devices verified via SSH banner grab through relay: friendlywrt (dropbear), aliyun-cloud (OpenSSH_8.9p1), radxa-cubie-a7a (OpenSSH_8.4p1). Some sshd builds only emit the banner after the client writes a byte — send a newline before reading.
+- Direct-LAN sweep from seeed-reserver (192.168.2.0/24): only 192.168.2.1 alive — it is the FriendlyWrt router (root/pi login OK), i.e. same box as Linkbit device friendlywrt. recamera-10/11/12/nom/200/201, jetson, rv1126b all powered off (port 22 closed).
 

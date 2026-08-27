@@ -60,13 +60,13 @@ Intel AX210 (if available) — monitor STABLE (better than old Intel), injection
 | Realtek RTL8822CE (seeed built-in) | OK | NOT tested, rtw88 driver | cannot do AP+monitor at same time on one phy |
 | Intel old (AX201 etc, iwlwifi) | UNRELIABLE — captures beacons but misses EAPOL | unreliable | the exact failure seen on steven |
 | Intel AX210 | OK | unreliable | passive capture acceptable |
-| Raspberry Pi 4/5 built-in (Cypress brcmfmac) | OK/stable | NOT supported | passive only |
+| Raspberry Pi 4/5 built-in (Cypress brcmfmac) | NOT supported — brcmfmac fullmac has NO monitor mode (`iw phy` lists only IBSS/managed/AP/P2P; `set type monitor` → -95 EOPNOTSUPP, verified 2026-08-26) | NOT supported | wired attack box / cracking host only |
 | Alfa AWUS036ACH (RTL8812AU) | OK | OK | community gold standard, ~¥250-400 |
 | Alfa AWUS036NHA / TP-Link TL-WN722N v1 (AR9271) | OK | OK | cheap, ~¥50-200, watch WN722N v1 only |
 | RTL8821CU/8822BU | flaky | flaky | avoid, driver mess |
 
 **Decision rule:**
-- Passive capture only (user manually reconnects phone) → any monitor-capable card works (Pi built-in, AX210, even RTL8822CE on a second box).
+- Passive capture only (user manually reconnects phone) → any monitor-capable card works (AX210, RTL8822CE on a second box). NOT Pi built-in (no monitor mode) and NOT steven's old Intel (misses EAPOL).
 - Full active attack with auto deauth → MUST have an injection-capable USB card (RTL8812AU / AR9271).
 
 ## Honest Attacker Workflow
@@ -157,6 +157,8 @@ A correct Python reference is in `scripts/crack_ptk.py` with a built-in hostapd 
 2. **seeed RTL8822CE rtw88**: cannot run AP + monitor virtual interface on the same phy simultaneously. Adding `mon0` flips `wlp4s0` from AP to monitor and breaks hostapd (`key not allowed`, `INTERFACE-DISABLED`). One card cannot be both AP and capture interface here. (2026-08-20)
 3. **Single-card same-phy AP+monitor**: generally unreliable across consumer drivers. Prefer two cards (one AP, one monitor) or two hosts.
 4. **hand-crafted pcap frame headers**: the 802.11 FC byte order and address-field assignment (ToDS/FromDS → A1/A2/A3 roles) is easy to get wrong, producing `0 handshake` or garbled BSSIDs. If constructing pcap from raw EAPOL hex (e.g. from hostapd -dd -K logs as a fallback), use the verified `scripts/make_pcap.py`.
+5. **Raspberry Pi 4 built-in WiFi (BCM4345/6, brcmfmac)**: monitor mode is NOT supported AT ALL. `iw phy phy0 info` lists no monitor in supported interface modes; `iw dev wlan0 set type monitor` fails with `-95 Operation not supported`. The earlier note "Pi monitor capture STABLE" was untested community lore — wrong. Pi = wired attack box / CPU cracking host only. Corollary: hashcat 6.2.5 + POCL on aarch64 crashed (`free(): invalid next size`) in mode 22000 benchmark even with `-O`; use aircrack-ng (dictionary/FIFO stream) for on-Pi cracking. (2026-08-26)
+6. **AP-side capture fallback**: when no monitor-capable card is within RF range, EAPOL frames of a self-owned hotspot can be captured with tcpdump on the AP's own interface (frames are byte-identical to over-the-air; no hostapd internals used). Legit last resort, but must be disclosed — it is not a true third-party capture point.
 
 ## Legal & Ethical Rules
 

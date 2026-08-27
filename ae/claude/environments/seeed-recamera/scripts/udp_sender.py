@@ -38,7 +38,8 @@ def main(frame_dir, target_host, target_port):
         pass
     frag_len = MTU - HEAD.size
     frame_id = 0
-    last_name = ""
+    last_path = ""
+    mtime_cache = {}
     sent = 0
     t0 = time.time()
     print(f"udp_sender -> {target_host}:{target_port} dir={frame_dir}", flush=True)
@@ -48,11 +49,29 @@ def main(frame_dir, target_host, target_port):
         except OSError:
             time.sleep(0.01)
             continue
-        best = last_name
+        # Pick the NEWEST file by mtime, not by name: frame counters grow past
+        # 10000 and restart at 0 across demo runs, both of which break lexicographic
+        # "max". stat results are cached per filename (frames are written once), so
+        # this stays cheap even with thousands of files in the directory.
+        best = ""
+        best_mt = -1.0
+        seen = set()
         for nm in names:
-            if nm.startswith("frame_") and nm.endswith(".jpg") and nm > best:
-                best = nm
-        if best == last_name:
+            if not (nm.startswith("frame_") and nm.endswith(".jpg")):
+                continue
+            seen.add(nm)
+            mt = mtime_cache.get(nm)
+            if mt is None:
+                try:
+                    mt = os.path.getmtime(os.path.join(frame_dir, nm))
+                except OSError:
+                    continue
+                mtime_cache[nm] = mt
+            if mt > best_mt:
+                best, best_mt = nm, mt
+        if len(mtime_cache) > len(seen) + 512:
+            mtime_cache = {k: v for k, v in mtime_cache.items() if k in seen}
+        if not best or best == last_path:
             time.sleep(0.005)
             continue
         path = os.path.join(frame_dir, best)
@@ -62,12 +81,12 @@ def main(frame_dir, target_host, target_port):
         except OSError:
             time.sleep(0.005)
             continue
-        # Only send complete JPEGs. Do NOT advance last_name on an incomplete
+        # Only send complete JPEGs. Do NOT advance last_path on an incomplete
         # frame so we retry the same file once the demo finishes writing it.
         if not data or data[:2] != b"\xff\xd8" or data[-2:] != b"\xff\xd9":
             time.sleep(0.005)
             continue
-        last_name = best
+        last_path = best
         total = len(data)
         nfr = (total + frag_len - 1) // frag_len
         frame_id = (frame_id + 1) & 0xFFFF

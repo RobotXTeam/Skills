@@ -25,9 +25,9 @@ Keep the backup path in the final report.
 
 ## Mode preservation
 
-Read `/userdata/local/apps/mode` before touching services. Normalize only for reporting: an absent/invalid value behaves as console, but do not rewrite it during deployment.
+Read `/userdata/local/apps/mode` before touching services. Normalize only for reporting: `nodered` stays `nodered`; an absent, legacy `console`, or invalid value behaves as `recamera-studio`. Do not rewrite it merely to simplify deployment; the versioned init migration owns persistent normalization.
 
-A successful deployment must prove the file content is unchanged. The Supervisor init script reconciles services to that persisted mode when it starts. Do not manually arm Node-RED in console mode or park it in Node-RED mode merely to make a deployment easier.
+A successful deployment must prove the effective mode is unchanged. The Supervisor init script reconciles services to that persisted mode when it starts. Do not manually arm Node-RED in reCamera Studio mode or park it in Node-RED mode merely to make a deployment easier.
 
 ## Web rollback
 
