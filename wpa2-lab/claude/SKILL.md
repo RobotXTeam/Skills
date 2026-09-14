@@ -45,13 +45,14 @@ Each +1 char ~70x cost. A long random password is the single best defense. The 8
 
 Use with the `ssh` skill. Relevant devices for this lab:
 
-- `seeed` @ 192.168.2.113 — Ubuntu 22.04, RTL8822CE WiFi (wlp4s0), supports AP+monitor but NOT simultaneously on same phy (rtw88 driver). sudo password `0`. AP/honeypot host.
+- `seeed` @ 192.168.2.113 — Ubuntu 22.04, RTL8822CE WiFi (wlp4s0), supports AP+monitor but NOT simultaneously on same phy (rtw88 driver). sudo password `0`. AP/honeypot host. RF note (2026-08-29): seeed's location sees NO CMCC-* APs at all (different building segment) — for qiang-side targets it is a cracking host only; transfer pcaps via scp over Tailscale (`seeed@100.76.45.91`, password `0`; LAN IP unreachable from qiang).
 - `seeed0` @ 192.168.2.194 — Ubuntu 24.04, no WiFi card. Useful as wired attack box only.
 - `steven` (local) — Ubuntu, Intel WiFi (wlp0s20f3, iwlwifi). sudo password `1`. monitor capture is UNRELIABLE for EAPOL (Intel weakness). Good hashcat CPU host.
+- `qiang` (local or Tailscale 100.78.97.65, user steven, sudo `1`) — Ubuntu, Intel AX210 (wlp1s0, iwlwifi), uplink = "Qiang" router ch6. In RF range of the lab CMCC-* routers. Monitor switch + self-restore reliable, but EAPOL M1/M2 frames systematically lost (lesson 7) and injection is recipe-dependent flaky (lesson 8) — can TRIGGER reconnects but cannot capture a crackable handshake.
 - Raspberry Pi 4/5 (when available) — Cypress CYW43455/43456. monitor capture STABLE, injection NOT supported. Slow hashcat.
 - AMD m780 (Radeon 780M RDNA3) laptop — best GPU-class compute host when available (~150k-400k H/s WPA).
 
-Intel AX210 (if available) — monitor STABLE (better than old Intel), injection UNRELIABLE. Acceptable for passive capture.
+Intel AX210 — TESTED on qiang 2026-08-28/29: monitor mode enters cleanly and a concurrent monitor vif can be created, but the vif is channel-locked to the associated channel (no zero-outage cross-channel capture), EAPOL M1/M2 are systematically dropped (only M3/M4 arrive), and `monitor flag fcsfail` is unsupported. NOT acceptable for handshake capture despite community claims.
 
 ## Hardware Capability Matrix (critical — read before choosing a card)
 
@@ -59,15 +60,15 @@ Intel AX210 (if available) — monitor STABLE (better than old Intel), injection
 |------|------------------------|---------------------------|-------|
 | Realtek RTL8822CE (seeed built-in) | OK | NOT tested, rtw88 driver | cannot do AP+monitor at same time on one phy |
 | Intel old (AX201 etc, iwlwifi) | UNRELIABLE — captures beacons but misses EAPOL | unreliable | the exact failure seen on steven |
-| Intel AX210 | OK | unreliable | passive capture acceptable |
+| Intel AX210 (qiang wlp1s0) | FAILS — mgmt/data captured but EAPOL M1/M2 systematically lost, only M3/M4 arrive (3 rounds verified 2026-08-28/29); fcsfail unsupported | flaky, recipe-dependent — worked once (airodump engine + `-9` prime + broadcast), dead next round (tcpdump engine + directed `-c`); never trust `aireplay -9` ACK% on iwlwifi | concurrent monitor vif possible but channel-locked to assoc channel |
 | Raspberry Pi 4/5 built-in (Cypress brcmfmac) | NOT supported — brcmfmac fullmac has NO monitor mode (`iw phy` lists only IBSS/managed/AP/P2P; `set type monitor` → -95 EOPNOTSUPP, verified 2026-08-26) | NOT supported | wired attack box / cracking host only |
 | Alfa AWUS036ACH (RTL8812AU) | OK | OK | community gold standard, ~¥250-400 |
 | Alfa AWUS036NHA / TP-Link TL-WN722N v1 (AR9271) | OK | OK | cheap, ~¥50-200, watch WN722N v1 only |
 | RTL8821CU/8822BU | flaky | flaky | avoid, driver mess |
 
 **Decision rule:**
-- Passive capture only (user manually reconnects phone) → any monitor-capable card works (AX210, RTL8822CE on a second box). NOT Pi built-in (no monitor mode) and NOT steven's old Intel (misses EAPOL).
-- Full active attack with auto deauth → MUST have an injection-capable USB card (RTL8812AU / AR9271).
+- Passive capture only (user manually reconnects phone) → RTL8822CE on a second box or a USB RTL8812AU/AR9271. NOT Pi built-in (no monitor mode), NOT steven's old Intel (misses all EAPOL), NOT qiang's AX210 (misses M1/M2 = misses the crackable part).
+- Full active attack with auto deauth → MUST have an injection-capable USB card (RTL8812AU / AR9271). Before planning deauth, parse the target beacon RSN IE caps: if MFPC/MFPR (802.11w) is set, deauth is useless.
 
 ## Honest Attacker Workflow
 
@@ -159,6 +160,10 @@ A correct Python reference is in `scripts/crack_ptk.py` with a built-in hostapd 
 4. **hand-crafted pcap frame headers**: the 802.11 FC byte order and address-field assignment (ToDS/FromDS → A1/A2/A3 roles) is easy to get wrong, producing `0 handshake` or garbled BSSIDs. If constructing pcap from raw EAPOL hex (e.g. from hostapd -dd -K logs as a fallback), use the verified `scripts/make_pcap.py`.
 5. **Raspberry Pi 4 built-in WiFi (BCM4345/6, brcmfmac)**: monitor mode is NOT supported AT ALL. `iw phy phy0 info` lists no monitor in supported interface modes; `iw dev wlan0 set type monitor` fails with `-95 Operation not supported`. The earlier note "Pi monitor capture STABLE" was untested community lore — wrong. Pi = wired attack box / CPU cracking host only. Corollary: hashcat 6.2.5 + POCL on aarch64 crashed (`free(): invalid next size`) in mode 22000 benchmark even with `-O`; use aircrack-ng (dictionary/FIFO stream) for on-Pi cracking. (2026-08-26)
 6. **AP-side capture fallback**: when no monitor-capable card is within RF range, EAPOL frames of a self-owned hotspot can be captured with tcpdump on the AP's own interface (frames are byte-identical to over-the-air; no hostapd internals used). Legit last resort, but must be disclosed — it is not a true third-party capture point.
+7. **qiang Intel AX210 (wlp1s0) drops EAPOL M1/M2**: 3 monitor windows vs CMCC-xbxm (2026-08-28/29). Monitor switch/channel capture fine; deauth-triggered reconnects fully observed (probe→auth→reassoc→EAPOL) but every handshake arrived M3/M4-only — M1+M2 missing in the ~60 ms burst right after reassociation (auth-req also missing). No M1/M2 → no ANonce/SNonce/MIC → nothing to crack (`aircrack: 0 handshake`, `hcxpcapngtool: not enough M1 frames`). `iw set monitor flag fcsfail` unsupported, so corrupted-frame recovery is unavailable. The old "AX210 monitor OK, passive capture acceptable" claim is FALSE for cracking purposes. See `references/session-2026-08-28.md`.
+8. **iwlwifi injection is recipe-dependent**: WORKED = airodump-ng as capture engine + `aireplay-ng -9` prime first + broadcast `timeout 15 aireplay-ng -0 3 -a BSSID` (round 1: 10355 frames out as exact 768-frame bursts per cycle, clients kicked and reconnected in ~2-4 s). DEAD = tcpdump as capture engine + directed `-c CLIENT` deauth + no prime (round 2: zero frames out in 5 min, clients undisturbed). `aireplay -9`'s "Injection is working"/ACK% verdicts are meaningless on iwlwifi (monitor mode has no TX-ACK feedback); verify injection BEHAVIORALLY by watching for the client's probe→auth→reassoc after a burst. Note `aireplay -0` spoofs SA=AP+reason 7, identical to AP-sent deauths — attribute origin by timing correlation with your own cycles.
+9. **Clients + deauth behavior (no-PMF target)**: CMCC-xbxm beacon RSN caps 0x000c (MFPC/MFPR=0) → broadcast deauth kicks clients reliably; kicked clients re-associate via PMKSA caching (REASSOC, not fresh ASSOC) and complete the 4-way within ~2 s. Client MACs locally-administered (randomized) and ROTATE between sessions — directed-deauth MAC lists go stale quickly.
+10. **Scripted capture hygiene**: (a) NEVER append airodump's stdout to a log file — its ANSI screen redraws wrote 9.3 GB in 5 minutes; use `-q` or redirect to /dev/null. (b) Autonomous outage-windows must use `trap restore EXIT` (down → `iw set type managed` → `nmcli dev set IF managed yes` → `nmcli con up PROFILE`) — survived all 3 rounds cleanly, including external kill. (c) pcap linktypes: airodump writes classic pcap w/o radiotap (105); tcpdump writes classic pcap WITH radiotap (127) even when named `.pcapng` — check the magic bytes, not the extension.
 
 ## Legal & Ethical Rules
 
@@ -182,3 +187,4 @@ A correct Python reference is in `scripts/crack_ptk.py` with a built-in hostapd 
 - `references/handshake-anatomy.md` — annotated 4-way handshake field-by-field with the actual captured hex from the 2026-08-20 experiment.
 - `references/hardware-notes.md` — detailed per-chip monitor/injection behavior and driver gotchas.
 - `references/session-2026-08-20.md` — full lab session log: what worked, what failed, the two "cheats" identified, and the honest-mode plan.
+- `references/session-2026-08-28.md` — live attack on lab CMCC-xbxm from qiang: 3 capture rounds, injection recipe findings, AX210 M1/M2 loss evidence, pcap/EAPOL parsing recipes. Attack reached handshake-trigger stage; no crackable hash due to hardware limits.

@@ -44,6 +44,7 @@ Use this skill for operational work in the Linkbit codebase, especially when the
 - Repo scan and ownership map: [references/repo-scan.md](./references/repo-scan.md)
 - Ubuntu remote onboarding and forwarding playbook: [references/ubuntu-cli-playbook.md](./references/ubuntu-cli-playbook.md)
 - Real 2026-04-29 steven device runbook: [references/steven-device-2026-04-29.md](./references/steven-device-2026-04-29.md)
+- 0.3.7 rollout facts (aliyun deploy, tailscale IP, mesh-vs-relay): [references/rollout-0.3.7-2026-09-07.md](./references/rollout-0.3.7-2026-09-07.md)
 - End-to-end helper script: [scripts/remote-ubuntu-agent-install.sh](./scripts/remote-ubuntu-agent-install.sh)
 
 ## Execution checklist

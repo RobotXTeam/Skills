@@ -1,6 +1,6 @@
 # Hardware Notes — WiFi cards for WPA2 attack lab
 
-Field-tested observations on Steven's hardware for WPA2 monitor/injection work. Updated 2026-08-20.
+Field-tested observations on Steven's hardware for WPA2 monitor/injection work. Updated 2026-08-29 (qiang AX210 field test).
 
 ## seeed — Realtek RTL8822CE (PCI, wlp4s0)
 
@@ -18,12 +18,22 @@ Field-tested observations on Steven's hardware for WPA2 monitor/injection work. 
 - Implication: do NOT use steven's built-in Intel WiFi for handshake capture. Use it as the hashcat CPU host instead (it has a 13th-gen i5-13500H).
 - Injection: not reliable on iwlwifi either. Not tested further.
 
-## Intel AX210 (planned, not yet tested on Steven's gear)
+## qiang — Intel AX210 (PCI, wlp1s0, iwlwifi) — TESTED 2026-08-28/29, FAILED for cracking
 
-- Driver: `iwlwifi` (newer firmware).
-- Monitor mode: community reports it as MORE stable than older Intel chips for EAPOL capture. Acceptable for passive capture.
-- Injection: Intel never officially supports injection; AX210 is "monitor OK, injection unreliable" per aircrack-ng wiki.
-- Use case: passive capture with manual phone reconnect trigger.
+The earlier "AX210 monitor OK" line was community lore. Field-tested against CMCC-xbxm (WPA2-CCMP, no PMF) over three ~5-minute monitor windows:
+
+- Monitor switch works: `nmcli dev set wlp1s0 managed no; ip link down; iw set type monitor; ip link up; iw set channel N`. Auto-restore back to managed + `nmcli con up Qiang` works reliably (trap-based scripts).
+- **Concurrent monitor vif**: `iw dev wlp1s0 interface add mon0 type monitor` SUCCEEDS (unlike most drivers), BUT the vif is channel-locked to the associated channel: `iw dev mon0 set channel 11` fails with `-16 Device or resource busy` while associated on ch6, and radiotap confirms mon0 only hears ch6. Useless for cross-channel capture without dropping the managed link. Delete vifs with `iw dev mon0 del` (NOT `ip link del` — that returns `Operation not supported`).
+- **EAPOL capture: SYSTEMATIC M1/M2 LOSS.** Every captured handshake came through as M3/M4 only (M1+M2 missing both times in round 1; round 2 had zero EAPOL because injection died; round 3 saw no AP frames at all after the first minute). aircrack: `0 handshake`; hcxpcapngtool: "not enough M1 frames". The missing M1/M2 means no ANonce/SNonce/MIC → nothing crackable.
+- `iw dev wlp1s0 set monitor flag fcsfail` → not supported by iwlwifi, so corrupted-frame recovery is not an option.
+- **Injection: recipe-dependent** (see SKILL.md lesson 8). Worked once (airodump engine + aireplay -9 prime + broadcast deauth → 10355 frames out, clients kicked), died completely the next round (tcpdump engine + directed `-c` deauth + no prime → 0 frames out). Never trust `aireplay -9`'s ACK% on iwlwifi (no TX-ACK reporting in monitor mode); verify behaviorally (do you see the client's probe→auth→reassoc after the burst?).
+- Implication: qiang's AX210 is NOT a usable handshake-capture card either. It can trigger reconnects (when injection works) but cannot collect the crackable frames. For real captures on qiang's side of the lab, a USB RTL8812AU/AR9271 card is still required — or AP-side capture on the owned router.
+
+## Target behavior notes (CMCC-xbxm, 2026-08-28)
+
+- Beacon RSN capabilities 0x000c → MFPC=0, MFPR=0: no 802.11w, deauth attacks land.
+- Kicked clients reconnect fast: probe → open auth → REASSOC (PMKSA caching, not fresh ASSOC) → 4-way within ~2 s. Client MACs partially randomized (locally administered bit set) — expect MACs to rotate between sessions; directed deauth lists go stale.
+- Round 3 anomaly (unresolved): after a normal prime, capture contained only ~28k control frames (BlockAck/ACK) and zero beacons/data from the target for 265 s — AP went silent or RX degraded to control-only. Needs re-testing if it matters.
 
 ## Raspberry Pi 4 — Cypress/Infineon CYW43455 (built-in)
 
@@ -63,7 +73,7 @@ Field-tested observations on Steven's hardware for WPA2 monitor/injection work. 
 | Goal | Best hardware on hand |
 |------|---------------------|
 | Run the honeypot AP | seeed (RTL8822CE, stable hostapd) |
-| Passive handshake capture | NO monitor-capable card currently on hand (seeed's RTL8822CE can monitor but is usually the AP host; steven's Intel misses EAPOL; Pi has no monitor). Fallback: AP-side tcpdump on a self-owned hotspot, or buy RTL8812AU/AR9271. |
-| Active deauth capture | NEED RTL8812AU / AR9271 USB card (none currently on hand) |
+| Passive handshake capture | NO reliable monitor card on hand. Tried: seeed RTL8822CE (works but is the AP host, and seeed's location sees no CMCC APs at all), steven old Intel (misses EAPOL entirely), qiang AX210 (misses EAPOL M1/M2 — the crackable part), Pi (no monitor). Fallback: AP-side tcpdump on a self-owned hotspot, or buy RTL8812AU/AR9271. |
+| Active deauth capture | NEED RTL8812AU / AR9271 USB card (none currently on hand). qiang AX210 injection is recipe-dependent flaky — can trigger reconnects but can't capture the result. |
 | Offline brute-force (GPU) | AMD 780M laptop |
 | Offline brute-force (CPU, small dict) | steven i5-13500H |

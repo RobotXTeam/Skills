@@ -1,43 +1,57 @@
 ---
-name: Linkbit
-description: Use this skill when working in the Linkbit repo for controller/relay/agent deployment, Ubuntu remote-agent onboarding, device invitation enrollment, policy setup, and TCP relay forwarding for SSH or desktop protocols.
+name: linkbit
+description: Operate, diagnose, deploy, onboard, package, and release the Linkbit controller, relay, CLI, desktop client, and Linux agent. Use for Linkbit mesh connectivity, virtual IP, ping/trace/speed/SSH, WireGuard Hub, TCP relay, invitation enrollment, policies, remote Ubuntu devices, GitHub releases, or the Linkbit repository.
 ---
 
-# Linkbit Skill
+# Linkbit
 
-Use this skill for operational work in the Linkbit codebase, especially when the goal is to get real connectivity working (not just build success).
+Work toward verified connectivity, not build success alone. When credentials and device access are available, run SSH/SCP/sudo/API operations directly and verify the real source-to-target path.
 
-Default execution stance: Codex should perform the work directly when SSH credentials or local access are available. Do not turn Linkbit onboarding into "give the user commands to copy"; use SSH/SCP/sudo/API calls yourself, then verify the real device and forwarding path.
+## Current network model
 
-## When to use
+- The current release line is `v0.3.4`.
+- `LINKBIT_MESH_ALL_DEVICES=true` is the controller default. It exposes all other devices as peers and authorizes relay sessions without per-pair policies. Create policies only when this setting is false.
+- WireGuard carries native virtual-IP traffic. A Hub peer advertises the whole `10.88.0.0/16`; agents then route the entire Linkbit network through that Hub.
+- Agents refresh network config every 30 seconds by default. Configure `LINKBIT_NETWORK_SYNC_SECONDS` or `linkbit-agent --network-sync`.
+- TCP Relay carries service traffic when UDP/WireGuard is unavailable. Linux transparent TCP can preserve `10.88.x.x:<port>` UX; target agents must log `tcp relay target enabled`.
+- `linkbit ping <device>` first tries OS ICMP, then uses an authenticated Relay probe. Read the reported `via direct` or `via relay` field.
+- Plain `ping 10.88.x.x` has no Relay fallback. It proves WireGuard only and requires bidirectional UDP reachability to the Hub or a reachable direct peer endpoint.
 
-- User asks how to deploy or operate Linkbit controller/relay/agent.
-- User asks how to enroll remote Ubuntu devices through CLI.
-- User asks how to set up SSH/RDP/NoMachine forwarding through Linkbit.
-- User asks to connect through a jump host or recover a slow/direct SSH path.
-- User asks to package or install headless CLI/agent on devices without a desktop.
-- User asks where to edit or debug APIs, policies, invitations, or relay sessions.
-- User asks to push Linkbit changes to the cloud, update GitHub, publish a tag, or refresh release assets.
+## Connectivity diagnosis
 
-## Fast path
+1. Check Controller and device control plane:
+   `curl -fsS http://<controller>/healthz`, then inspect `/api/v1/devices/{id}/network-config` with device credentials.
+2. Run `linkbit trace <device>`, `linkbit ping <device>`, and `linkbit speed <device>` from the enrolled source.
+3. On the source, inspect `ip route`, `ip address show linkbit0`, and `wg show linkbit0`.
+4. On the target, require an online Agent and `tcp relay target enabled` before testing Relay paths.
+5. Test the actual service, such as SSH login or an RDP/NoMachine connection. A TCP accept alone can be a local transparent-proxy false positive.
 
-1. Build Linux binaries:
-   `.tools/go/bin/go build -o bin/linkbit-agent ./cmd/linkbit-agent`
-2. Confirm controller health:
-   `curl -fsS http://<controller>/healthz`
-3. Create invitation token with admin key:
-   `POST /api/v1/invitations`
-4. Install `linkbit-agent` on remote Ubuntu with TCP relay as the default path:
-   `scripts/remote-ubuntu-agent-install.sh`
-5. Ensure policy allows source device -> target device for `22,3389,4000`.
-6. Test direct Linkbit IP:
-   `ssh <user>@10.88.x.x` or connect to `10.88.x.x:3389` / `10.88.x.x:4000`.
+Interpret results precisely:
 
-## Cloud push and release path
+- `linkbit ping ... via relay` plus a successful speed probe proves source credentials, Controller authorization, Relay streaming, and the target Agent.
+- `wg show` with bytes sent but `0 B received`, including failure to ping the Hub IP, means the WireGuard endpoint is not returning UDP. Check Hub process/listen socket, cloud UDP security rules, endpoint/port, and server firewall forwarding.
+- Peers with empty endpoints cannot form direct WireGuard sessions. They need the Hub path.
+- Do not call a Relay ping success proof that plain ICMP works. Do not call a WireGuard failure a Mesh authorization failure when Relay succeeds.
 
-When the user invokes this skill and asks to push new Linkbit changes to the cloud, default to doing the full GitHub update directly: verify, commit, push `main`, tag, build release artifacts, create/update the GitHub release, upload assets, and verify the remote state. Do not stop at instructions unless credentials are unavailable.
+Read [references/2026-07-11-v0.3.4-mesh-ping.md](./references/2026-07-11-v0.3.4-mesh-ping.md) for the v0.3.3 failure evidence and v0.3.4 fix.
 
-Never write a GitHub PAT into this skill, the repo, shell history, or committed files. On Steven's workstation, default to reading the GitHub PAT from `~/.config/linkbit/github_token` when `GITHUB_TOKEN` is not already set. Use a transient environment variable such as `GITHUB_TOKEN` or `TOKEN` for the current shell command only. The working GitHub account for the previous successful run was `Nova-Steven`, with collaborator push permission on `RobotXTeam/Linkbit`. Classic PATs with `repo` and `workflow` scopes worked through the GitHub API. For Git push, the reliable method was an HTTP Basic extraheader, not embedding the token in the remote URL:
+## Ubuntu onboarding
+
+1. Build: `.tools/go/bin/go build -o bin/linkbit-agent ./cmd/linkbit-agent`.
+2. Validate Controller invitation creation before touching the remote host.
+3. Prefer the agent-only deb, or use `scripts/remote-ubuntu-agent-install.sh`.
+4. Keep reusable remote files under `~/.steven/Linkbit`.
+5. Verify registration, online status, Relay target log, authorization mode, `linkbit ping`, and a real service path.
+
+Enrollment tokens are bootstrap-only. Reconnect uses the device ID/token in the state file. There is no rename API; rename by removing local state and the old Controller device, then enroll with a fresh token and desired name.
+
+For flaky management SSH, use a reachable jump host with `ProxyCommand`. For flaky Tailscale transfer paths, prefer remote `curl -C -` release downloads over a large initial `scp`. Check Clash/Mihomo TUN interception if Tailscale appears online but stalls at SSH banner.
+
+## Release workflow
+
+When asked to publish, complete the whole release: inspect changes, test, commit, push `main`, tag, build/upload assets, and verify GitHub state. Do not stop at instructions when credentials are available.
+
+Never put a GitHub PAT in the repository, skill, remote URL, or committed files. Use a transient `GITHUB_TOKEN`. On Steven's workstation, read it from `~/.config/linkbit/github_token` only when the environment variable is absent. The known working account is `Nova-Steven` with push access to `RobotXTeam/Linkbit`; use an HTTP Basic extraheader if normal token URL auth fails:
 
 ```sh
 GITHUB_TOKEN="${GITHUB_TOKEN:-$(cat ~/.config/linkbit/github_token)}"
@@ -46,64 +60,29 @@ git -c http.https://github.com/.extraheader="AUTHORIZATION: basic $AUTH" \
   push https://github.com/RobotXTeam/Linkbit.git main:main
 ```
 
-Recommended end-to-end sequence:
+Release sequence:
 
-1. Check workspace state with `git status --short --branch`, inspect diffs, and avoid reverting unrelated user changes.
-2. Run tests before release:
-   `GOROOT=$PWD/.tools/go ./.tools/go/bin/go test ./...`
-3. Commit current changes with a focused message.
-4. Push `main` using the `http.extraheader` pattern above.
-5. Pick the next semver tag from `git tag --list --sort=-version:refname`; for normal release bumps, use the next patch version.
-6. Build local release assets:
-   `LINKBIT_VERSION=vX.Y.Z ./scripts/package-release.sh`
-7. Confirm `artifacts/release/` contains `checksums.txt`, Linux amd64/arm64 tarballs, Darwin amd64/arm64 tarballs, Windows amd64 zip, and the Linux desktop AppImage when desktop build is enabled.
-8. Create and push an annotated tag:
-   `git tag -a vX.Y.Z -m "Linkbit vX.Y.Z"`
-   then push the tag with the same `http.extraheader` auth pattern.
-9. Create the GitHub release via API if the Actions release is not enough or you need to upload locally verified artifacts:
-   `POST https://api.github.com/repos/RobotXTeam/Linkbit/releases`
-10. Upload assets to the release upload URL with `curl --data-binary @artifact`.
-11. Verify the release asset list, remote `main` SHA, pushed tag, and local `git status --short --branch`.
+1. Inspect `git status --short --branch` and diffs; preserve unrelated user changes.
+2. Run `GOROOT=$PWD/.tools/go ./.tools/go/bin/go test ./...`.
+3. Commit and push `main`.
+4. Select the next semantic version and build with `LINKBIT_VERSION=vX.Y.Z ./scripts/package-release.sh`.
+5. Confirm CLI archives, Linux agent deb/rpm, desktop assets, and `checksums.txt`.
+6. Create and push annotated tag `vX.Y.Z`. The tag triggers `.github/workflows/release.yml`.
+7. Verify remote main/tag SHA, Actions jobs, GitHub Release metadata, asset list, and checksums. Upload locally verified assets through the GitHub API when needed.
 
-Known release lessons:
+## Repository invariants
 
-- If `git push https://x-access-token:$TOKEN@github.com/...` returns `Invalid username or token` while the GitHub API shows `permissions.push: true`, retry using the `http.extraheader` Basic Auth pattern above.
-- `./scripts/package-release.sh` should select the newest `desktop/dist/*.AppImage`; stale AppImages in `desktop/dist` previously caused `cp ... target is not a directory`.
-- Transparent TCP is Linux-specific. Keep Linux syscall code behind a `//go:build linux` file and provide a non-Linux stub so cross-platform release builds keep working.
-- A tag push triggers `.github/workflows/release.yml`; still verify Actions status and release assets explicitly. If needed, create or update the release directly through the GitHub API and upload the locally built artifacts.
+- `scripts/remote-install.sh` deploys Controller/Relay, not endpoint agents.
+- Keep TCP Relay startup independent from WireGuard success.
+- `LINKBIT_WG_DRY_RUN=true` deliberately disables native WireGuard traffic; Relay can still work.
+- Remote desktop requires a real target RDP/VNC/NoMachine/RustDesk service.
+- Transparent TCP is Linux-specific; keep syscall code behind Linux build tags and retain a non-Linux stub.
+- Do not restore obsolete desktop controls unless current product requirements explicitly change.
 
-## Key truths in this repo
+## References
 
-- `scripts/remote-install.sh` uploads controller/relay artifacts only; it is not a remote agent installer.
-- Enrollment token is one-time bootstrap for first registration; reconnect uses state file device credentials.
-- TCP relay forwarding requires policy authorization (`sourceId` -> `targetId`, protocol `tcp`).
-- Current product path is direct Linkbit IP with transparent TCP relay fallback, not user-managed local listen ports. Users should connect to `10.88.x.x:<service-port>` directly.
-- Do not reintroduce the old desktop UI fields `本地监听`, `远端目标`, `启动 SSH/RDP 中转`, or `停止中转`.
-- Agent startup must not let WireGuard failure prevent TCP relay. The expected default for remote target devices is `LINKBIT_WG_DRY_RUN=true`, `LINKBIT_TCP_RELAY_ENABLED=true`, and `LINKBIT_TRANSPARENT_TCP=false`; the local workstation may use `LINKBIT_TRANSPARENT_TCP=true`.
-- Remote desktop still requires the target service to exist (RDP/VNC/NoMachine/SSH); Linkbit only provides transport.
-- There is no device rename API today. To rename a registered agent, stop the agent, remove its local state, delete the old controller device/policy, and re-enroll with a fresh token and the desired `LINKBIT_DEVICE_NAME`.
-- If direct SSH to a target is unstable, use a `ProxyCommand` through the reachable jump host and keep using the same installation flow.
-- For headless Ubuntu/Debian, prefer the agent-only deb package made by `./scripts/package-agent-deb.sh` when available.
-- Put temporary remote Linkbit install files under `~/.steven/Linkbit` when the user wants a tidy per-user workspace. Avoid scattering new Linkbit files in `/tmp` except for short-lived probes.
-- For flaky Tailscale SSH, avoid large `scp` first. Prefer remote self-download from GitHub release with `curl -C -` resume, or stream a compressed tar only after confirming the SSH data path is stable.
-- If a remote device registers but SSH forwarding times out during banner exchange, verify the target agent log contains `tcp relay target enabled`. If not, set `LINKBIT_WG_DRY_RUN=true` and use the current locally built agent binary before retesting TCP relay.
-- A plain TCP connect to `10.88.x.x` can be misleading because the local transparent proxy may accept the socket first. Treat SSH banner/login or target agent logs as the real proof.
-- If Tailscale management paths look connected but hang at SSH banner, check whether Clash Verge/Mihomo TUN (`Meta`, fake IP `198.18.0.0/16`, table `2022`) is intercepting `100.64.0.0/10` or `controlplane.tailscale.com`. Stop Clash TUN only as a temporary repair path and restart it afterward.
-
-## Primary references
-
-- Repo scan and ownership map: [references/repo-scan.md](./references/repo-scan.md)
-- Ubuntu remote onboarding and forwarding playbook: [references/ubuntu-cli-playbook.md](./references/ubuntu-cli-playbook.md)
-- Real 2026-04-29 steven device runbook: [references/steven-device-2026-04-29.md](./references/steven-device-2026-04-29.md)
-- Seeed device onboarding notes: [references/seeed-device.md](./references/seeed-device.md)
-- Direct-IP transparent relay worklog: [references/2026-05-10-direct-ip-transparent-relay.md](./references/2026-05-10-direct-ip-transparent-relay.md)
-- End-to-end helper script: [scripts/remote-ubuntu-agent-install.sh](./scripts/remote-ubuntu-agent-install.sh)
-
-## Execution checklist
-
-1. Validate controller API key and invitation flow first.
-2. Install remote agent as systemd service on Ubuntu.
-3. Verify remote agent online status in `/api/v1/devices`.
-4. Verify or create network policy for the intended source-target pair.
-5. Test direct Linkbit IP with real client (`ssh`, `mstsc`, NoMachine client, etc).
-6. For new devices, do not call the job finished until the target agent log contains `tcp relay target enabled`, controller policy exists, and a source-side direct IP test succeeds.
+- Ownership map: [references/repo-scan.md](./references/repo-scan.md)
+- Ubuntu onboarding: [references/ubuntu-cli-playbook.md](./references/ubuntu-cli-playbook.md)
+- Direct-IP Relay history: [references/2026-05-10-direct-ip-transparent-relay.md](./references/2026-05-10-direct-ip-transparent-relay.md)
+- Known devices: [references/seeed-device.md](./references/seeed-device.md) and [references/steven-device-2026-04-29.md](./references/steven-device-2026-04-29.md)
+- Installer helper: [scripts/remote-ubuntu-agent-install.sh](./scripts/remote-ubuntu-agent-install.sh)
