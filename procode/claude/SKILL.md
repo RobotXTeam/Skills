@@ -1,6 +1,7 @@
 ---
 name: procode
-description: Seeed reCamera Pro (RV1126B Rockchip SDK) 完整代码库的架构地图与开发指引。当需要了解、查阅、修改、编译或部署 reCamera Pro / reCamera v2 的代码时加载本 skill：包括 83 个子仓库的目录映射、build.sh 构建系统、rkipc/recamera2-ipc 主应用、vigil 录像引擎、React+C++ Web UI、媒体管线(rockit/MPP/rkaiq)、ISP 调优、RKNN/RKNN-LLM、RT-Thread MCU、BoardConfig、烧录与 OTA。Triggers on: reCamera Pro, recamera v2, RV1126B, rockchip SDK, rkipc, vigil, recamera2-ipc, entry.cgi, RkLunch, BoardConfig_Recamera2, build.sh lunch, web backend, REST API, FastCGI, DTS, device tree, sensor, kernel, boot.img.
+description: >-
+  Seeed reCamera Pro (RV1126B Rockchip SDK) 完整代码库的架构地图与开发指引。当需要了解、查阅、修改、编译或部署 reCamera Pro / reCamera v2 的代码时加载本 skill：包括 83 个子仓库的目录映射、build.sh 构建系统、rkipc/recamera2-ipc 主应用、vigil 录像引擎、React+C++ Web UI、媒体管线(rockit/MPP/rkaiq)、ISP 调优、RKNN/RKNN-LLM、RT-Thread MCU、BoardConfig、烧录与 OTA。Triggers on: reCamera Pro, recamera v2, RV1126B, rockchip SDK, rkipc, vigil, recamera2-ipc, entry.cgi, RkLunch, BoardConfig_Recamera2, build.sh lunch, web backend, REST API, FastCGI, DTS, device tree, sensor, kernel, boot.img.
 ---
 
 # procode — reCamera Pro (RV1126B) 代码库地图

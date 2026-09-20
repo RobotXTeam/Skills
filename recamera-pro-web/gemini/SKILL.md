@@ -1,5 +1,5 @@
 ---
-name: reCameraPro_web
+name: recamera-pro-web
 description: 为 reCamera Pro（RV1126B）WebUI 制作「可双击打开的 UI 原型演示」，供产品经理拿给研发看——让研发照着这个界面和逻辑去改代码。当用户要求「做个 UI 给研发看」「加个按钮/弹窗/页面」「我有个新 UI 需求」「做个界面演示/原型/效果图」，且对象是 reCamera Pro 的 Web 管理界面时使用。产出为单个离线 HTML（完全复刻现有界面外观）+ 交付目录 ~/固件/reCamera Pro/<日期>_<主题>/。注意：只针对 reCamera Pro 的 WebUI（仓库 linux-app-web-recamera_web_react），不是 reCamera 2002，也不是 sscma-example-sg200x 的 Studio/Node-RED 项目。
 ---
 

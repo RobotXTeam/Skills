@@ -1,6 +1,7 @@
 ---
 name: RiceEye
-description: Use this skill for Steven's RiceEye vision project, rice seedling YOLO datasets, Meta-GPAF graduation thesis defense Q&A, and related files under /home/steven/work/vision or /mnt/debian/home/steven/work/vision. Trigger when the user mentions RiceEye, Meta-GPAF, GPAF, rice seedling detection, rice missing-seedling detection, YOLO dataset conversion/merge, 毕设, 毕业论文, 答辩, 水稻数据集.
+description: >-
+  Use this skill for Steven's RiceEye vision project, rice seedling YOLO datasets, Meta-GPAF graduation thesis defense Q&A, and related files under /home/steven/work/vision or /mnt/debian/home/steven/work/vision. Trigger when the user mentions RiceEye, Meta-GPAF, GPAF, rice seedling detection, rice missing-seedling detection, YOLO dataset conversion/merge, 毕设, 毕业论文, 答辩, 水稻数据集.
 metadata:
   short-description: RiceEye project, datasets, and thesis context
 ---

@@ -1,6 +1,7 @@
 ---
 name: RiceEye
-description: Use this skill when working on the RiceEye project, Meta-GPAF thesis, rice seedling missing detection, or defense preparation. Triggers on: RiceEye, 水稻, 缺苗, Meta-GPAF, 毕设, 答辩, 论文, YOLO seedling detection, GPAF algorithm, 随机森林代理模型.
+description: >-
+  Use this skill when working on the RiceEye project, Meta-GPAF thesis, rice seedling missing detection, or defense preparation. Triggers on: RiceEye, 水稻, 缺苗, Meta-GPAF, 毕设, 答辩, 论文, YOLO seedling detection, GPAF algorithm, 随机森林代理模型.
 ---
 
 # RiceEye Skill
