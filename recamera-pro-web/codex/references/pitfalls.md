@@ -172,3 +172,71 @@ timeout 120 grep -rl "关键字" --include=*.c --include=*.h ./某个仓库
 ```
 
 优先用 `grep` 工具并限定 `path`。
+
+---
+
+## 十三、新建/改名 skill 时：DSH 的命名与 frontmatter 硬规则
+
+**症状**：skill 目录、`SKILL.md` 都放好了，但 `/名字` 不出现，会话 catalog 里也没有。
+
+**原因**：DSH 对不合规的 skill **静默忽略**，只在 logger 里告警，界面上看不到任何提示。
+
+### 硬规则（来自 `@deepseek-ai/dsh-skill`）
+
+```js
+const SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;   // 全小写 kebab-case
+```
+
+- **只允许** `a-z` `0-9` 和连字符，且不能连续/首尾连字符
+- **不允许**大写字母、下划线、中文、空格
+- 例：`reCameraPro_web` ✗ → `recamera-pro-web` ✓
+
+### frontmatter 也是硬门槛
+
+用 YAML 解析，`description` 里的 **ASCII `": "`** 会让纯量解析失败：
+
+```yaml
+description: ... Triggers on: reCamera Pro, ...      # ✗ Nested mappings are not allowed
+```
+
+**修法**：改用折叠块标量
+
+```yaml
+description: >-
+  ... Triggers on: reCamera Pro, ...
+```
+
+### 自查方法（不要靠猜）
+
+DSH 的 skill 目录都是软链 → `~/.claude/skills/*`。要一次找出**所有**被忽略的 skill，
+直接跑它自己的发现实现：
+
+```bash
+cat > /tmp/test_discovery.mjs <<'JS'
+const APP = "/opt/DeepSeek Harness/resources/app/node_modules/@deepseek-ai";
+const { FileSystemSkillProvider } = await import(`${APP}/dsh-skill-filesystem/lib/index.js`);
+const warnings = [];
+const ctx = { get: () => undefined,
+  logger: { warn: (m) => warnings.push(m), info(){}, error(){} } };
+const provider = new FileSystemSkillProvider(ctx,
+  { invalidate(){}, signal: new AbortController().signal }, {});
+const list = await provider.list({ cwd: process.cwd() });
+const c = Array.isArray(list) ? list : list.candidates;
+console.log("发现:", c.length);
+console.log(warnings.map((w) => "  ! " + w).join("\n") || "  （无告警）");
+await provider.dispose().catch(() => {});
+process.exit(0);
+JS
+node /tmp/test_discovery.mjs
+```
+
+输出里 `ignored: invalid skill name` / `ignored: invalid YAML frontmatter`
+就是被静默丢弃的 skill 及原因。
+
+> 注意：必须带 `process.exit(0)`，否则 chokidar 的文件监听会让进程不退出。
+
+### 顺带
+
+`~/.agents/skills/` 里有一批**大写命名**的旧副本（`CloneStore`、`Linkbit`、
+`OpenASR`、`Weekly` 等），会被同样拒绝并产生告警噪音。小写版本在
+`~/.dsh/skills` 里是好的，所以功能不受影响——但每次扫描都会刷告警。

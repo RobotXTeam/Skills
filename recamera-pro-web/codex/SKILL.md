@@ -220,7 +220,19 @@ git -C "$REPO" status --porcelain          # 应当只剩用户自己原有的�
 3. **已知的限制**，例如按钮只在某开关打开时出现、参数默认值待算法确认、
    设备端接口尚未实现等
 
-## 九、参考文件
+## 九、本 skill 自身的命名（改名前必读）
+
+DSH 要求 skill 名为**全小写 kebab-case**：`/^[a-z0-9]+(?:-[a-z0-9]+)*$/`。
+本 skill 因此叫 **`recamera-pro-web`**，不是 `reCameraPro_web`（大写与下划线会被拒，
+且是静默忽略、界面上没有任何提示）。
+
+同理，`SKILL.md` 的 `description` 里**不能出现 ASCII 的 `": "`**，
+否则 YAML 解析失败、skill 被整个丢弃。需要冒号时用 `>-` 折叠块标量。
+详见 `references/pitfalls.md` 第十三节（含一次性列出所有被忽略 skill 的脚本）。
+
+---
+
+## 十、参考文件
 
 - `references/product-boundaries.md` — reCamera Pro 与其它项目的区分（**先读这个**）
 - `references/capture-recipe.md` — 抓取真实 DOM/CSS 的完整命令与配方
