@@ -186,20 +186,44 @@ def main() -> int:
     if total_before:
         print(f"字体  ：{total_before/1024/1024:.1f} MB -> {total_after/1024:.0f} KB")
 
-    # 自检
+    # 自检：把「必须保真」在构建这一步就卡住
     problems = []
     for pat in (r'src="https?://', r'href="https?://'):
         if re.search(pat, html):
             problems.append(f"存在外部引用：{pat}")
     if "[hidden]{display:none" not in html:
         problems.append("缺少 [hidden] 修正")
+
+    def _norm(t: str) -> str:
+        """字体 URL 与空白归一化，使替换过的 CSS 仍可与原 CSS 比对。"""
+        t = re.sub(r"url\([^)]*\)", "url(*)", t)
+        t = re.sub(r"format\(\s*[\"'][^\"']*[\"']\s*\)", "format(*)", t)
+        return re.sub(r"\s+", " ", t)
+
+    if _norm(css) not in _norm(html):
+        problems.append("真实打包 CSS 未被完整内联（样式可能被改动手写）")
+
+    for marker in ('class="app-container"', 'class="sidebar"', "sidebar-nav"):
+        if marker not in html:
+            problems.append(f"缺少真实应用结构标记：{marker}")
+            break
+
+    if not page_html.strip():
+        problems.append("页面 DOM 为空（未传 --page 抓取结果）")
+
     if problems:
-        print("\n⚠ 自检问题：")
+        print("\n✗ 组装自检未通过：")
         for p in problems:
             print("  -", p)
+        print("\n提示：--page / --modal 必须是**抓取的真实 DOM**，")
+        print("      --scratch 必须指向**已构建的仓库**（真实打包 CSS 的来源）。")
+        print("      不要为了省事手写界面——研发看到的就是假界面。")
         return 2
 
-    print("自检：无外部依赖，可离线打开 ✓")
+    font_count = html.count("data:font/woff2")
+    print("自检：真实 CSS 已内联、真实结构标记齐备、字体已内嵌、无外部依赖 ✓")
+    print(f"      （内嵌字体 {font_count} 个）")
+    print("      交付前请再跑一次 scripts/verify_fidelity.py 作为最终闸门。")
     return 0
 
 

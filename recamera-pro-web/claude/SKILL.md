@@ -22,6 +22,28 @@ description: 为 reCamera Pro（RV1126B）WebUI 制作「可双击打开的 UI �
 
 反过来说，**不要**交付这些东西作为主体：git 补丁、单元测试、启动脚本、部署说明。
 
+### ⛔ 三条铁律（违反则本次产出作废）
+
+这是本 skill 唯一的**强制性要求**，其余都是方法建议。
+
+**铁律 1：样式必须来自真实打包产物，禁止手写。**
+演示页里的 `<style>` 必须**完整包含** `build/static/css/main.*.css`。
+自己写一套"看起来差不多"的 CSS = 生产假界面。**这是本 skill 最容易犯、后果最严重的错误。**
+
+**铁律 2：结构必须来自真实运行界面，禁止自己搭。**
+页面 DOM 必须由浏览器从真实运行的应用里取（`document.getElementById('root').outerHTML`），
+必须带真实应用的骨架标记（`.app-container` / `.sidebar` / `.sidebar-nav`）。
+不是自己拼一个相似的布局。
+
+**铁律 3：没过 `scripts/verify_fidelity.py` 不许交付。**
+这是把上面两条从"文字要求"变成"可执行闸门"的脚本。
+它会逐字比对真实 CSS、检查真实结构标记、字体内嵌、外部依赖、主题变量。
+**exit code 非 0 就是没通过**，必须回到第五节的抓取流程重做，不许换个说法交付。
+
+> 为什么必须做成闸门：手写界面看起来"挺像"，产品评审时分辨不出来，
+> 但研发照着实现就会走偏。**3A 那次效果好，正是因为严格走了抓取路线。**
+> 一旦图省事手写，风格就会明显偏离原版——这已经发生过。
+
 ## 二、产品边界（最常搞错的地方）
 
 | 是 | 不是 |
@@ -146,9 +168,24 @@ python3 <skill>/scripts/build_demo.py \
 （打开/关闭、模式切换、场景联动、开关、档位、保存/重置的视觉反馈）。
 参考 `scripts/` 里的实现，或直接写一段 vanilla JS 传进去。
 
-### Step 4 — 验证：和真实界面对照
+### Step 4 — 验证：硬闸门 + 视觉对照
 
-**必须做视觉对照**，否则"看起来不一样"是最大的失败模式：
+**4a. 硬闸门（必过，不过不许交付）**
+
+```bash
+python3 <skill>/scripts/verify_fidelity.py \
+    --demo   <组装好的.html> \
+    --scratch "$SCRATCH" \
+    --expect "<本次新增控件上的文案>"
+```
+
+逐字比对真实 CSS、检查真实结构标记 / 字体内嵌 / 外部依赖 / 主题变量。
+**exit code 非 0 就是没通过**——回到 Step 2 重抓，不要换个说法交付。
+
+> `build_demo.py` 已内置同一套自检；但交付前仍要独立跑一次本脚本，
+> 因为演示也可能由别的方式产生。
+
+**4b. 视觉对照（必做）**
 
 ```bash
 # 真实界面（Step 2 的服务）截图
@@ -157,6 +194,9 @@ python3 <skill>/scripts/build_demo.py \
 ```
 
 用 `read_image` 亲眼比对，不要只看 DOM 断言。同时跑一遍交互验收（见第七节）。
+
+> 闸门能保证"用了真样式"，但**保证不了"看起来对"**——抓取状态不对、
+> 元素被遮挡、间距崩了，都要靠看图发现。两者缺一不可。
 
 ### Step 5 — 交付并还原
 
@@ -191,8 +231,13 @@ git -C "$REPO" status --porcelain          # 应当只剩用户自己原有的�
 
 ## 七、验收清单（交付前逐条过）
 
-**外观**
-- [ ] 侧边栏、页面标题、标签栏与真实界面一致（不是自己画的）
+**硬闸门（不过则整体作废）**
+- [ ] `verify_fidelity.py` 退出码为 0 —— 真实 CSS 已完整内联
+- [ ] 真实结构标记齐备（`.app-container` / `.sidebar` / `.sidebar-nav`）
+- [ ] 字体已内嵌、无外部依赖、主题变量可用
+
+**外观（需亲眼比对截图）**
+- [ ] 侧边栏、页面标题、标签栏与真实界面**逐像素级接近**（不是自己画的）
 - [ ] 字体是真实的（页面元素 `font-family` 含 `Montserrat` / `Source Han Sans SC`）
 - [ ] 主色是 `#8fc31f`
 - [ ] 明暗主题都正常
@@ -210,6 +255,19 @@ git -C "$REPO" status --porcelain          # 应当只剩用户自己原有的�
 - [ ] 文件在 `~/固件/reCamera Pro/<日期>_<主题>/`
 - [ ] README 里只有「怎么打开、怎么看、要跟研发说明什么」
 - [ ] 主仓库 `git status` 干净（只剩用户原有改动）
+
+### 出现"风格和原版差别很大"时怎么办
+
+按可能性排查：
+
+1. **样式是手写的**（最常见）→ `verify_fidelity.py` 会直接报"仅覆盖 x%"
+2. **抓取时状态不对**（例如演示的是弹窗，但抓的时候弹窗没打开）
+3. **字体没内嵌** → 中文/数字退化成系统字体，观感立刻不同
+4. **自己加了覆盖样式** → 除 `DEMO_CSS_FIXES`（`[hidden]` 与 `:hover` 两条修正）
+   之外不该有任何自写 CSS；发现多余的自写样式应删掉
+5. **主题属性没加上** → `<body data-theme="light">` 缺失会让颜色全错
+
+**修法是回 Step 2 重抓，不是在手写的那份上继续调。**
 
 ## 八、给研发说明什么（README 必写）
 
@@ -238,7 +296,8 @@ DSH 要求 skill 名为**全小写 kebab-case**：`/^[a-z0-9]+(?:-[a-z0-9]+)*$/`
 - `references/capture-recipe.md` — 抓取真实 DOM/CSS 的完整命令与配方
 - `references/pitfalls.md` — 环境与技术的坑（更详细）
 - `references/delivery-readme-template.md` — 交付 README 模板
+- `scripts/verify_fidelity.py` — **保真度硬闸门**：确认样式与结构确实来自真实界面（交付前必跑）
 - `scripts/serve_preview.py` — 起「构建产物 + Mock 后端」同端口预览
-- `scripts/build_demo.py` — 组装单文件 HTML（内联 CSS + 字体子集化）
+- `scripts/build_demo.py` — 组装单文件 HTML（内联真实 CSS + 字体子集化，内置同套自检）
 - `scripts/merge_panes.py` — 把两个模式的内容区合并进一个弹窗外壳
 - `scripts/new_delivery.sh` — 建交付目录骨架
